@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+
+import random
+import string
+
+def generate_random_password(length=12):
+    """
+    Generate a random password with letters, digits, and symbols.
+
+    Parameters:
+    - length (int): Length of the password (default is 12).
+
+    Returns:
+    - str: Generated password.
+    """
+    password_characters = string.ascii_letters + string.digits + string.punctuation
+    password = ''.join(random.choice(password_characters) for _ in range(length))
+    return password
+
+def main():
+    # Set the desired password length
+    password_length = 18
+
+    # Generate and print a random password
+    random_password = generate_random_password(password_length)
+    print("Random Password:", random_password)
+
+if __name__ == "__main__":
+    main()

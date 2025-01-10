@@ -1,0 +1,30 @@
+#!/bin/bash
+
+KUBERNETES_CLEAN_DAYS=7  # Define el número de días para limpiar
+
+# Función para eliminar recursos
+delete_resources() {
+  local resources=$1
+  while IFS='|' read -r namespace resource; do
+    kubectl -n "$namespace" delete "$resource" --wait=false
+    sleep 0.25
+  done <<< "$resources"
+}
+
+# Elimina ReplicaSets vacíos más antiguos que $KUBERNETES_CLEAN_DAYS días
+emptyReplicaSets=$(kubectl get rs --all-namespaces --no-headers -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,AGE:.metadata.creationTimestamp' | \
+  awk -v max_days="$KUBERNETES_CLEAN_DAYS" '$3 ~ /d|h/ && int($3) > max_days {print $1 "|" $2}')
+
+delete_resources "$emptyReplicaSets"
+
+# Elimina trabajos completados más antiguos que 1 hora
+finishedJobs=$(kubectl get jobs --all-namespaces --no-headers -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,COMPLETIONS:.spec.completions,AGE:.metadata.creationTimestamp' | \
+  awk '$3 == 1 && $4 ~ /h/ {print $1 "|" $2}')
+
+delete_resources "$finishedJobs"
+
+# Elimina pods evictados no reciclados más antiguos que 1 hora
+evictedPods=$(kubectl get pods --all-namespaces --no-headers -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,STATUS:.status.phase,AGE:.metadata.creationTimestamp' | \
+  awk '$3 == "Evicted" && $4 ~ /h/ {print $1 "|" $2}')
+
+delete_resources "$evictedPods"

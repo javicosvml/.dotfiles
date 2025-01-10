@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Remove exited containers
+docker rm -v $(docker ps -aq -f status=exited)
+
+# Remove dangling images
+docker rmi $(docker images -qf dangling=true)
+
+# Remove dangling volumes
+docker volume rm $(docker ps -aq -f status=exited)
