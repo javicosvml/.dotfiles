@@ -1,0 +1,165 @@
+# ~/.zshrc - Zsh configuration file for interactive shells.
+
+# Zinit: Plugin manager for Zsh - https://github.com/zdharma/zinit
+if [[ ! -d ~/.zinit ]]; then
+  git clone https://github.com/zdharma/zinit.git ~/.zinit/bin
+fi
+
+# Initialize Zinit before defining exports
+export ZINIT=$HOME/.zinit/bin/zi.zsh
+source "$ZINIT"
+
+# ------------------------------
+# Paths and Environment Variables
+# ------------------------------
+
+# Add directories to PATH
+export PATH=$PATH:$HOME/bin:/usr/local/bin:$HOME/.local/bin
+
+# Man and library paths
+export MANPATH=$MANPATH:/usr/local/man
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+# Locale configuration
+export LANG=en_US.UTF-8
+
+# ------------------------------
+# History configuration
+# ------------------------------
+
+# History variables
+HISTFILE=~/.zsh_history
+HISTSIZE=5000
+SAVEHIST=$HISTSIZE
+HIST_STAMPS="yyyy-mm-dd HH:MM:SS"
+
+# History options
+setopt autocd          # Automatically change to a directory without using 'cd'
+setopt auto_list       # Show matches when more than one option is available in autocomplete
+setopt auto_menu       # Show a menu for autocomplete
+setopt always_to_end   # Always add commands to the end of the history
+setopt inc_append_history # Add history incrementally while typing
+setopt hist_expire_dups_first # Expire duplicates first in the history
+setopt hist_ignore_all_dups   # Ignore duplicate commands in history
+setopt hist_ignore_space     # Ignore commands that start with a space
+setopt hist_reduce_blanks   # Remove extra spaces from history
+setopt hist_save_no_dups   # Do not save duplicates in the history file
+setopt hist_verify       # Verify the command before execution
+
+# ------------------------------
+# Aliases and Custom Functions
+# ------------------------------
+
+# Load custom aliases and functions
+source ~/.zsh.d/alias.zsh
+source ~/.zsh.d/tools.zsh
+
+# ------------------------------
+# Zinit Plugins
+# ------------------------------
+
+# Load Zinit plugins
+zi ice pick"async.zsh" src"pure.zsh"
+zi light sindresorhus/pure
+
+# Load additional plugins
+zinit for \
+    light-mode \
+    zsh-users/zsh-autosuggestions \
+    zsh-users/zsh-completions \
+    light-mode \
+    zdharma-continuum/fast-syntax-highlighting \
+    zdharma-continuum/history-search-multi-word \
+    light-mode \
+    superbrothers/zsh-kubectl-prompt \
+    light-mode \
+    pick"async.zsh" \
+    src"pure.zsh" \
+  sindresorhus/pure
+
+# ------------------------------
+# Custom Prompt
+# ------------------------------
+
+# Load VCS (Version Control System) and colors configurations
+autoload -Uz vcs_info
+autoload -U colors && colors
+autoload -U promptinit && promptinit
+
+# Define pre-command functions
+precmd_vcs_info() { vcs_info }
+precmd_functions+=( precmd_vcs_info )
+
+# Enable prompt substitution
+setopt prompt_subst
+
+# VCS format configuration
+zstyle ':vcs_info:git:*' formats '(%b)%r'
+zstyle ':vcs_info:*' enable git
+zstyle ':zsh-kubectl-prompt:' separator '|'
+
+# Custom prompt
+PROMPT=$'%F{032}┌──(%F{120}%m%F{226}の%F{196}%n%F{032})\n└─#%{$reset_color%} '
+
+# Right prompt (RPROMPT)
+if [[ -d $HOME/.kube ]]; then
+  RPROMPT='%F{092}($ZSH_KUBECTL_PROMPT)%{$reset_color%}'
+else
+  RPROMPT='%F{226}No KLUSTER selected!'
+fi
+
+# ------------------------------
+# Autocompletion Configuration
+# ------------------------------
+
+# Configure autocompletion in Zsh
+autoload -Uz compinit && compinit -u
+autoload -Uz bashcompinit && bashcompinit
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
+
+# Autocompletion options
+zstyle ':completion:*:*:*:*:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' group-name ''
+zstyle ':completion:::::' completer _expand _complete _ignored _approximate
+zstyle ':completion:*:make:*:targets' call-command true
+zstyle ':completion:*:make:*' tag-order targets
+zstyle ':completion:*:descriptions' format '%B%d%b'
+zstyle ':completion:*' special-dirs true
+
+# ------------------------------
+# Color Support
+# ------------------------------
+
+# Configure color support only if gdircolors is available
+if command -v gdircolors >/dev/null 2>&1; then
+    if [ -r ~/.dircolors ]; then
+        eval "$(gdircolors -b ~/.dircolors)"
+    else
+        eval "$(gdircolors -b)"
+    fi
+
+    # Alias to use GNU commands on macOS
+    alias ls="gls --color=auto"
+    alias grep="grep --color=auto"
+    alias fgrep="fgrep --color=auto"
+    alias egrep="egrep --color=auto"
+
+    # Configure colors for the 'less' pager
+    export LESS_TERMCAP_mb=$'\E[1;31m'  # Red bold
+    export LESS_TERMCAP_md=$'\E[1;36m'  # Cyan bold
+    export LESS_TERMCAP_me=$'\E[0m'     # Reset
+    export LESS_TERMCAP_so=$'\E[01;33m' # Yellow background
+    export LESS_TERMCAP_se=$'\E[0m'     # Reset
+    export LESS_TERMCAP_us=$'\E[1;32m'  # Green underline
+    export LESS_TERMCAP_ue=$'\E[0m'     # Reset
+
+    # Configure colors for Zsh autocompletion
+    zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+fi
+
+# If using Zinit, configure gdircolors
+if [[ -n $ZINIT ]]; then
+    zinit ice atclone"gdircolors -b LS_COLORS > c.zsh" atpull'%atclone' pick"c.zsh" nocompile'!'
+fi
