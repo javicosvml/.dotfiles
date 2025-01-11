@@ -22,13 +22,20 @@ help: ## Shows this makefile help
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-all: asdf profile ## Install everything
+all: profile tools ## Install everything
 
 profile: ## Install ZSH, Tmux, and Neovim profiles
 	$(MAKE) all -C profile
 
+tools: ## Install basic tools with ASDF
+	$(MAKE) all -C tools	
+
 asdf: ## Install ASDF
-	@echo "Installing ASDF"
-	rm -rf ${HOME}/.asdf && \
-	git clone https://github.com/asdf-vm/asdf.git ${HOME}/.asdf && \
-	echo "ASDF done!"
+	@echo "Checking if ASDF is already installed..."
+	@if [ -d "${HOME}/.asdf" ]; then \
+		echo "ASDF found. Removing existing installation..."; \
+		rm -rf ${HOME}/.asdf; \
+	fi
+	@echo "Installing ASDF..."
+	@git clone https://github.com/asdf-vm/asdf.git ${HOME}/.asdf
+	@echo "ASDF installation completed!"
