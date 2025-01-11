@@ -142,6 +142,7 @@ if command -v gdircolors >/dev/null 2>&1; then
 
     # Alias to use GNU commands on macOS
     alias ls="gls --color=auto"
+    #alias ls="lsd --color=always --icon always"
     alias grep="grep --color=auto"
     alias fgrep="fgrep --color=auto"
     alias egrep="egrep --color=auto"
