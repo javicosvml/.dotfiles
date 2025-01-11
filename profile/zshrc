@@ -7,7 +7,7 @@ fi
 
 # Initialize Zinit before defining exports
 export ZINIT=$HOME/.zinit/bin/zi.zsh
-source "$ZINIT"
+source $ZINIT
 
 # ------------------------------
 # Paths and Environment Variables
@@ -142,7 +142,6 @@ if command -v gdircolors >/dev/null 2>&1; then
 
     # Alias to use GNU commands on macOS
     alias ls="gls --color=auto"
-    #alias ls="lsd --color=always --icon always"
     alias grep="grep --color=auto"
     alias fgrep="fgrep --color=auto"
     alias egrep="egrep --color=auto"
@@ -162,5 +161,13 @@ fi
 
 # If using Zinit, configure gdircolors
 if [[ -n $ZINIT ]]; then
-    zinit ice atclone"gdircolors -b LS_COLORS > c.zsh" atpull'%atclone' pick"c.zsh" nocompile'!'
+    zinit lucid \
+        atclone'(( !${+commands[gdircolors]} )) && local P=g; \
+            ${P}sed -i "/DIR/c\\DIR 38;5;63;1" material.dircolors; \
+            TERM=ansi ${P}gdircolors -b material.dircolors >! colors.zsh' \
+        atpull'%atclone' \
+        pick"colors.zsh" nocompile'!' reset \
+        atload'zstyle ":completion:*:default" list-colors "${(s.:.)LS_COLORS}";' \
+        for zpm-zsh/dircolors-material
 fi
+
