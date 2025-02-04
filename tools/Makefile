@@ -2,19 +2,22 @@
 .SHELL := /bin/sh
 .PHONY: help
 .DEFAULT_GOAL := help
-CURRENT_FOLDER=$(shell basename "$$(pwd)")
-BOLD=$(shell tput bold)
-RED=$(shell tput setaf 1)
-RESET=$(shell tput sgr0)
 
-## Global
-NAME=tools
-VERSION=scratch
+# Global variables
+NAME = tools
+VERSION = scratch
 
-## Paths
-DOTFILES=${HOME}/.dotfiles
-TOOLS=${DOTFILES}/tools
-ASDF=${HOME}/.asdf/bin/asdf
+# Terminal styling
+BOLD  = $(shell tput bold)
+RED   = $(shell tput setaf 1)
+RESET = $(shell tput sgr0)
+
+# Paths
+DOTFILES = ${HOME}/.dotfiles
+TOOLS    = ${DOTFILES}/tools
+ASDF     = ${HOME}/.asdf/bin/asdf
+
+CURRENT_FOLDER = $(shell basename "$$(pwd)")
 
 help:
 	@echo ""
