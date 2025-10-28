@@ -19,7 +19,7 @@ def generate_random_password(length=12):
 
 def main():
     # Set the desired password length
-    password_length = 18
+    password_length = 16
 
     # Generate and print a random password
     random_password = generate_random_password(password_length)
