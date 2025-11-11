@@ -96,32 +96,48 @@ kitty: brew ## Install Kitty terminal emulator and configuration
 	@echo ""
 	@echo "$(GREEN)$(BOLD)✓ Kitty setup complete!$(RESET)"	
 
-asdf: brew ## Install ASDF version manager (latest from Homebrew)
+asdf: brew ## Install ASDF version manager (v0.18.0+ from Homebrew)
 	@echo "$(BOLD)Installing ASDF version manager...$(RESET)"
 	@if ! brew list asdf >/dev/null 2>&1; then \
-		echo "$(YELLOW)Installing ASDF (latest)...$(RESET)"; \
+		echo "$(YELLOW)Installing ASDF via Homebrew...$(RESET)"; \
 		brew install asdf; \
+		ASDF_VERSION=$$(brew list --versions asdf | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'); \
 		echo ""; \
-		echo "$(BOLD)Configuring ASDF...$(RESET)"; \
+		echo "$(BOLD)Configuring ASDF for ZSH...$(RESET)"; \
 		if [ -f "$(HOME)/.zshrc" ]; then \
 			if ! grep -q "asdf.sh" "$(HOME)/.zshrc"; then \
 				echo "" >> $(HOME)/.zshrc; \
-				echo "# ASDF Version Manager (managed by Homebrew)" >> $(HOME)/.zshrc; \
+				echo "# ASDF Version Manager (v$$ASDF_VERSION - managed by Homebrew)" >> $(HOME)/.zshrc; \
 				echo ". $$(brew --prefix asdf)/libexec/asdf.sh" >> $(HOME)/.zshrc; \
-				echo "fpath=($$(brew --prefix asdf)/share/zsh/site-functions $$fpath)" >> $(HOME)/.zshrc; \
-				echo "$(GREEN)✓ ASDF added to .zshrc$(RESET)"; \
+				echo "fpath=($$(brew --prefix asdf)/share/zsh/site-functions \$$fpath)" >> $(HOME)/.zshrc; \
+				echo "$(GREEN)✓ ASDF configuration added to .zshrc$(RESET)"; \
+			else \
+				echo "$(GREEN)✓ ASDF already configured in .zshrc$(RESET)"; \
 			fi; \
 		fi; \
-		echo "$(GREEN)✓ ASDF installed successfully!$(RESET)"; \
-		echo "Version: $$(brew list --versions asdf)"; \
-		echo "To activate: source ~/.zshrc or restart terminal"; \
+		echo "$(GREEN)✓ ASDF v$$ASDF_VERSION installed successfully!$(RESET)"; \
+		echo ""; \
+		echo "$(YELLOW)To activate ASDF now, run:$(RESET)"; \
+		echo "  source ~/.zshrc"; \
+		echo ""; \
+		echo "$(YELLOW)Then install tools with:$(RESET)"; \
+		echo "  cd tools && make help"; \
 	else \
-		echo "$(GREEN)✓ ASDF already installed$(RESET)"; \
-		echo "Version: $$(brew list --versions asdf)"; \
+		ASDF_VERSION=$$(brew list --versions asdf | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'); \
+		echo "$(GREEN)✓ ASDF v$$ASDF_VERSION already installed$(RESET)"; \
+		echo "Location: $$(brew --prefix asdf)"; \
+		echo ""; \
+		echo "$(YELLOW)To update ASDF:$(RESET) brew upgrade asdf"; \
+		echo "$(YELLOW)To update plugins:$(RESET) cd tools && make update"; \
 	fi
 	@echo ""
-	@echo "$(BOLD)Updating ASDF to latest...$(RESET)"
-	@brew upgrade asdf 2>/dev/null || echo "$(GREEN)✓ Already on latest version$(RESET)"
+	@echo "$(BOLD)Verifying ASDF installation...$(RESET)"
+	@if command -v asdf >/dev/null 2>&1; then \
+		echo "$(GREEN)✓ ASDF is active: $$(asdf --version | head -1)$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠ ASDF installed but not yet in PATH$(RESET)"; \
+		echo "  Run: source ~/.zshrc"; \
+	fi
 
 clean: ## Remove symbolic links and temporary files
 	@echo "$(BOLD)Cleaning up...$(RESET)"

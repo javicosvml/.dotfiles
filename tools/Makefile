@@ -1,5 +1,7 @@
 # Makefile for installing CLI tools via ASDF and Homebrew
-# Optimized for macOS
+# Updated for ASDF v0.18.0+ (December 2024)
+# Breaking changes: 'global/local' replaced with 'set'
+# New commands: 'asdf latest', 'asdf set --home'
 
 .ONESHELL:
 SHELL := /bin/bash
@@ -8,7 +10,7 @@ SHELL := /bin/bash
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 
-.PHONY: help all asdf-plugins brew-tools python nodejs terraform kubernetes docker aws gcloud azure all-tools
+.PHONY: help all brew-tools install-plugin python nodejs golang rust ruby terraform kubernetes docker aws gcloud azure list update clean
 
 .DEFAULT_GOAL := help
 
@@ -19,229 +21,163 @@ YELLOW := $(shell tput setaf 3)
 RED := $(shell tput setaf 1)
 RESET := $(shell tput sgr0)
 
-# Check if ASDF is available
+# ASDF check
 ASDF_EXISTS := $(shell command -v asdf 2>/dev/null)
+ASDF_VERSION := $(shell asdf version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
 
 help: ## Show this help message
 	@echo ""
-	@echo "$(BOLD)Tools Installation Makefile$(RESET)"
+	@echo "$(BOLD)Development Tools Manager - ASDF v0.18.0+$(RESET)"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)%-30s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
+	@echo "$(YELLOW)Installed tools:$(RESET)"
+	@asdf current 2>/dev/null | tail -n +2 | awk '{if($$2!="______") printf "  • %-12s %s\n", $$1, $$2}' || echo "  No tools installed yet"
+	@echo ""
 
-check-asdf: ## Check if ASDF is installed
+# Check ASDF availability
+define check_asdf
 	@if [ -z "$(ASDF_EXISTS)" ]; then \
-		echo "$(RED)✗ ASDF not found. Please install it first:$(RESET)"; \
-		echo "  make asdf (in parent Makefile)"; \
+		echo "$(RED)✗ ASDF not found. Install with: cd ~/.dotfiles && make asdf$(RESET)"; \
 		exit 1; \
-	else \
-		echo "$(GREEN)✓ ASDF found at $(ASDF_EXISTS)$(RESET)"; \
 	fi
+endef
+
+# Generic plugin installation function
+define install_plugin
+	@if ! asdf plugin list 2>/dev/null | grep -q "^$(1)$$"; then \
+		echo "$(YELLOW)Adding $(1) plugin...$(RESET)"; \
+		asdf plugin add $(1) $(2) 2>/dev/null || { echo "$(RED)✗ Failed to add $(1) plugin$(RESET)"; exit 1; }; \
+	fi
+endef
+
+# Generic tool installation function
+define install_tool
+	$(call check_asdf)
+	$(call install_plugin,$(1),$(2))
+	@echo "$(YELLOW)Installing $(1)...$(RESET)"; \
+	LATEST=$$(asdf latest $(1) 2>/dev/null); \
+	if [ -z "$$LATEST" ]; then \
+		echo "$(RED)✗ Could not determine latest $(1) version$(RESET)"; \
+		exit 1; \
+	fi; \
+	if asdf list $(1) 2>/dev/null | grep -q "$$LATEST"; then \
+		echo "$(GREEN)✓ $(1) $$LATEST already installed$(RESET)"; \
+	else \
+		echo "  Installing version $$LATEST..."; \
+		if asdf install $(1) $$LATEST 2>&1 | tee /tmp/$(1)-install.log | grep -v "^$$"; then \
+			echo "$(GREEN)✓ $(1) $$LATEST installed$(RESET)"; \
+		else \
+			echo "$(RED)✗ Installation failed. Check /tmp/$(1)-install.log$(RESET)"; \
+			exit 1; \
+		fi; \
+	fi; \
+	asdf set --home $(1) $$LATEST 2>/dev/null; \
+	asdf reshim $(1) 2>/dev/null
+endef
 
 brew-tools: ## Install essential CLI tools via Homebrew
 	@echo "$(BOLD)Installing CLI tools via Homebrew...$(RESET)"
-	@brew install --quiet wget curl jq yq
-	@brew install --quiet gh git-lfs
-	@brew install --quiet bat lsd exa fd ripgrep fzf
-	@brew install --quiet htop btop dust duf procs
-	@brew install --quiet tree tldr thefuck
-	@echo "$(GREEN)✓ Homebrew tools installed!$(RESET)"
-
-asdf-plugins: check-asdf ## Install common ASDF plugins
-	@echo "$(BOLD)Installing ASDF plugins...$(RESET)"
-	@for plugin in python nodejs ruby golang rust terraform kubectl helm kind kubectx krew awscli gcloud azure-cli; do \
-		if asdf plugin list | grep -q "^$$plugin$$"; then \
-			echo "$(GREEN)✓$(RESET) $$plugin plugin already installed"; \
+	@for tool in wget curl jq yq gh git-lfs bat lsd fd ripgrep fzf htop tree tldr; do \
+		if brew list $$tool &>/dev/null; then \
+			echo "$(GREEN)✓$(RESET) $$tool"; \
 		else \
-			echo "$(YELLOW)Installing $$plugin plugin...$(RESET)"; \
-			asdf plugin add $$plugin 2>/dev/null || echo "$(YELLOW)⚠ Could not add $$plugin (might not exist)$(RESET)"; \
+			echo "$(YELLOW)Installing $$tool...$(RESET)"; \
+			brew install --quiet $$tool || brew install $$tool; \
 		fi; \
 	done
-	@echo "$(GREEN)✓ ASDF plugins installed!$(RESET)"
+	@echo "$(GREEN)✓ Homebrew tools installed$(RESET)"
 
-python: check-asdf ## Install Python via ASDF (latest)
-	@echo "$(BOLD)Installing Python...$(RESET)"
-	@if ! asdf plugin list | grep -q "^python$$"; then \
-		asdf plugin add python; \
-	fi
-	@LATEST=$$(asdf list all python | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$$' | tail -1); \
-	echo "Installing Python $$LATEST..."; \
-	asdf install python $$LATEST; \
-	asdf global python $$LATEST
-	@echo "$(GREEN)✓ Python installed: $$(python --version)$(RESET)"
+python: ## Install Python (latest stable)
+	$(call install_tool,python)
 
-nodejs: check-asdf ## Install Node.js via ASDF (LTS)
-	@echo "$(BOLD)Installing Node.js...$(RESET)"
-	@if ! asdf plugin list | grep -q "^nodejs$$"; then \
-		asdf plugin add nodejs; \
-	fi
-	@LATEST=$$(asdf list all nodejs | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$$' | grep -E '^(18|20|22)\.' | tail -1); \
-	echo "Installing Node.js $$LATEST..."; \
-	asdf install nodejs $$LATEST; \
-	asdf global nodejs $$LATEST
-	@echo "$(GREEN)✓ Node.js installed: $$(node --version)$(RESET)"
+nodejs: ## Install Node.js (latest stable)
+	$(call install_tool,nodejs)
 
-terraform: check-asdf ## Install Terraform via ASDF (latest)
-	@echo "$(BOLD)Installing Terraform...$(RESET)"
-	@if ! asdf plugin list | grep -q "^terraform$$"; then \
-		asdf plugin add terraform; \
-	fi
-	@LATEST=$$(asdf list all terraform | grep -v - | tail -1); \
-	echo "Installing Terraform $$LATEST..."; \
-	asdf install terraform $$LATEST; \
-	asdf global terraform $$LATEST
-	@echo "$(GREEN)✓ Terraform installed: $$(terraform version -json | jq -r .terraform_version)$(RESET)"
+golang: ## Install Go (latest stable)
+	$(call install_tool,golang)
 
-kubernetes: check-asdf ## Install Kubernetes tools (kubectl, helm, kind, kubectx, krew)
-	@echo "$(BOLD)Installing Kubernetes tools...$(RESET)"
-	@# kubectl
-	@if ! asdf plugin list | grep -q "^kubectl$$"; then \
-		asdf plugin add kubectl; \
-	fi
-	@LATEST=$$(asdf list all kubectl | grep -v - | tail -1); \
-	asdf install kubectl $$LATEST 2>/dev/null || true; \
-	asdf global kubectl $$LATEST 2>/dev/null || true
-	@# helm
-	@if ! asdf plugin list | grep -q "^helm$$"; then \
-		asdf plugin add helm; \
-	fi
-	@LATEST=$$(asdf list all helm | grep -v - | tail -1); \
-	asdf install helm $$LATEST 2>/dev/null || true; \
-	asdf global helm $$LATEST 2>/dev/null || true
-	@# kind
-	@if ! asdf plugin list | grep -q "^kind$$"; then \
-		asdf plugin add kind; \
-	fi
-	@LATEST=$$(asdf list all kind | grep -v - | tail -1); \
-	asdf install kind $$LATEST 2>/dev/null || true; \
-	asdf global kind $$LATEST 2>/dev/null || true
-	@# kubectx
-	@if ! asdf plugin list | grep -q "^kubectx$$"; then \
-		asdf plugin add kubectx; \
-	fi
-	@LATEST=$$(asdf list all kubectx | grep -v - | tail -1); \
-	asdf install kubectx $$LATEST 2>/dev/null || true; \
-	asdf global kubectx $$LATEST 2>/dev/null || true
-	@# krew
-	@if ! asdf plugin list | grep -q "^krew$$"; then \
-		asdf plugin add krew; \
-	fi
-	@LATEST=$$(asdf list all krew | grep -v - | tail -1); \
-	asdf install krew $$LATEST 2>/dev/null || true; \
-	asdf global krew $$LATEST 2>/dev/null || true
-	@echo "$(GREEN)✓ Kubernetes tools installed!$(RESET)"
-	@echo "  kubectl: $$(kubectl version --client -o json 2>/dev/null | jq -r .clientVersion.gitVersion || echo 'N/A')"
-	@echo "  helm: $$(helm version --short 2>/dev/null || echo 'N/A')"
-	@echo "  kind: $$(kind version 2>/dev/null || echo 'N/A')"
+rust: ## Install Rust (latest stable)
+	$(call install_tool,rust)
 
-docker: ## Install Docker via Homebrew
-	@echo "$(BOLD)Installing Docker...$(RESET)"
+ruby: ## Install Ruby (latest stable)
+	$(call install_tool,ruby)
+
+terraform: ## Install Terraform (latest stable)
+	$(call install_tool,terraform)
+
+kubectl: ## Install kubectl (latest stable)
+	$(call install_tool,kubectl)
+
+helm: ## Install Helm (latest stable)
+	$(call install_tool,helm)
+
+kind: ## Install kind - Kubernetes in Docker
+	$(call install_tool,kind,https://github.com/reegnz/asdf-kind.git)
+
+kubectx: ## Install kubectx/kubens
+	$(call install_tool,kubectx,https://github.com/virtualstaticvoid/asdf-kubectx.git)
+
+aws: ## Install AWS CLI
+	$(call install_tool,awscli)
+
+kubernetes: kubectl helm kind kubectx ## Install all Kubernetes tools
+
+docker: ## Install Docker Desktop via Homebrew
+	@echo "$(BOLD)Installing Docker Desktop...$(RESET)"
 	@if brew list --cask docker &>/dev/null; then \
-		echo "$(GREEN)✓ Docker already installed$(RESET)"; \
+		echo "$(GREEN)✓ Docker Desktop already installed$(RESET)"; \
 	else \
 		brew install --cask docker; \
-		echo "$(GREEN)✓ Docker installed!$(RESET)"; \
+		echo "$(GREEN)✓ Docker Desktop installed$(RESET)"; \
 	fi
-
-aws: check-asdf ## Install AWS CLI via ASDF
-	@echo "$(BOLD)Installing AWS CLI...$(RESET)"
-	@if ! asdf plugin list | grep -q "^awscli$$"; then \
-		asdf plugin add awscli; \
-	fi
-	@LATEST=$$(asdf list all awscli | tail -1); \
-	asdf install awscli $$LATEST 2>/dev/null || true; \
-	asdf global awscli $$LATEST 2>/dev/null || true
-	@echo "$(GREEN)✓ AWS CLI installed: $$(aws --version 2>&1 || echo 'N/A')$(RESET)"
 
 gcloud: ## Install Google Cloud SDK via Homebrew
 	@echo "$(BOLD)Installing Google Cloud SDK...$(RESET)"
 	@if brew list --cask google-cloud-sdk &>/dev/null; then \
-		echo "$(GREEN)✓ gcloud already installed$(RESET)"; \
+		echo "$(GREEN)✓ Google Cloud SDK already installed$(RESET)"; \
 	else \
 		brew install --cask google-cloud-sdk; \
-		echo "$(GREEN)✓ Google Cloud SDK installed!$(RESET)"; \
+		echo "$(GREEN)✓ Google Cloud SDK installed$(RESET)"; \
 	fi
 
 azure: ## Install Azure CLI via Homebrew
 	@echo "$(BOLD)Installing Azure CLI...$(RESET)"
 	@if brew list azure-cli &>/dev/null; then \
-		echo "$(GREEN)✓ azure-cli already installed$(RESET)"; \
+		echo "$(GREEN)✓ Azure CLI already installed$(RESET)"; \
 	else \
 		brew install azure-cli; \
-		echo "$(GREEN)✓ Azure CLI installed!$(RESET)"; \
+		echo "$(GREEN)✓ Azure CLI installed$(RESET)"; \
 	fi
 
-golang: check-asdf ## Install Go via ASDF (latest)
-	@echo "$(BOLD)Installing Go...$(RESET)"
-	@if ! asdf plugin list | grep -q "^golang$$"; then \
-		asdf plugin add golang; \
-	fi
-	@LATEST=$$(asdf list all golang | grep -v - | tail -1); \
-	echo "Installing Go $$LATEST..."; \
-	asdf install golang $$LATEST; \
-	asdf global golang $$LATEST
-	@echo "$(GREEN)✓ Go installed: $$(go version)$(RESET)"
-
-rust: check-asdf ## Install Rust via ASDF (latest)
-	@echo "$(BOLD)Installing Rust...$(RESET)"
-	@if ! asdf plugin list | grep -q "^rust$$"; then \
-		asdf plugin add rust; \
-	fi
-	@LATEST=$$(asdf list all rust | grep -v - | tail -1); \
-	echo "Installing Rust $$LATEST..."; \
-	asdf install rust $$LATEST; \
-	asdf global rust $$LATEST
-	@echo "$(GREEN)✓ Rust installed: $$(rustc --version)$(RESET)"
-
-ruby: check-asdf ## Install Ruby via ASDF (latest)
-	@echo "$(BOLD)Installing Ruby...$(RESET)"
-	@if ! asdf plugin list | grep -q "^ruby$$"; then \
-		asdf plugin add ruby; \
-	fi
-	@LATEST=$$(asdf list all ruby | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$$' | tail -1); \
-	echo "Installing Ruby $$LATEST..."; \
-	asdf install ruby $$LATEST; \
-	asdf global ruby $$LATEST
-	@echo "$(GREEN)✓ Ruby installed: $$(ruby --version)$(RESET)"
-
-all-tools: brew-tools asdf-plugins ## Install all CLI tools (interactive selection)
+all: brew-tools python nodejs golang terraform kubernetes ## Install essential development tools
 	@echo ""
-	@echo "$(BOLD)Select tools to install:$(RESET)"
+	@echo "$(GREEN)$(BOLD)✓ Essential tools installed!$(RESET)"
 	@echo ""
-	@read -p "Install Python? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) python; fi
-	@read -p "Install Node.js? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) nodejs; fi
-	@read -p "Install Go? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) golang; fi
-	@read -p "Install Rust? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) rust; fi
-	@read -p "Install Ruby? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) ruby; fi
-	@read -p "Install Terraform? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) terraform; fi
-	@read -p "Install Kubernetes tools? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) kubernetes; fi
-	@read -p "Install Docker? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) docker; fi
-	@read -p "Install AWS CLI? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) aws; fi
-	@read -p "Install Google Cloud SDK? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) gcloud; fi
-	@read -p "Install Azure CLI? [y/N]: " -n 1 -r REPLY; echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) azure; fi
+	@echo "$(YELLOW)Tip: Run 'make list' to see all installed versions$(RESET)"
+
+list: ## List all installed ASDF tools and versions
+	$(call check_asdf)
+	@echo "$(BOLD)ASDF Version:$(RESET) $(ASDF_VERSION)"
 	@echo ""
-	@echo "$(GREEN)$(BOLD)✓ All selected tools installed!$(RESET)"
+	@echo "$(BOLD)Installed Tools:$(RESET)"
+	@asdf current 2>/dev/null || echo "  No tools installed"
 
-all: brew-tools asdf-plugins python nodejs terraform kubernetes ## Install essential tools (non-interactive)
+update: ## Update ASDF and all plugins
+	$(call check_asdf)
+	@echo "$(BOLD)Updating ASDF...$(RESET)"
+	@brew upgrade asdf 2>/dev/null || echo "$(GREEN)✓ ASDF up to date$(RESET)"
 	@echo ""
-	@echo "$(GREEN)$(BOLD)✓ Essential tools installation complete!$(RESET)"
+	@echo "$(BOLD)Updating plugins...$(RESET)"
+	@asdf plugin update --all 2>&1 || true
+	@echo "$(GREEN)✓ Update complete$(RESET)"
 
-list: check-asdf ## List installed ASDF tools and versions
-	@echo "$(BOLD)Installed ASDF tools:$(RESET)"
-	@asdf current
+clean: ## Remove unused ASDF versions
+	$(call check_asdf)
+	@echo "$(BOLD)Cleaning unused tool versions...$(RESET)"
+	@for plugin in $$(asdf plugin list 2>/dev/null); do \
+		echo "  Cleaning $$plugin..."; \
+		asdf list $$plugin 2>/dev/null | grep -v '*' | xargs -I {} asdf uninstall $$plugin {} 2>/dev/null || true; \
+	done
+	@echo "$(GREEN)✓ Cleanup complete$(RESET)"
 
-update: check-asdf ## Update all ASDF plugins
-	@echo "$(BOLD)Updating ASDF plugins...$(RESET)"
-	@asdf plugin update --all
-	@echo "$(GREEN)✓ All plugins updated!$(RESET)"

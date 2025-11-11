@@ -3,13 +3,17 @@
 
 # ASDF Version Manager (Homebrew installation)
 # Documentation: https://asdf-vm.com/
+# IMPORTANT: ASDF is sourced AFTER Homebrew to ensure ASDF-managed tools take priority in PATH
 if [[ -f "$(brew --prefix asdf)/libexec/asdf.sh" ]]; then
   source "$(brew --prefix asdf)/libexec/asdf.sh"
+  # Prepend ASDF shims to PATH to prioritize ASDF-managed tools over Homebrew
+  export PATH="$HOME/.asdf/shims:$PATH"
   # Append completions to fpath
   fpath=($(brew --prefix asdf)/share/zsh/site-functions $fpath)
 elif [[ -f "$HOME/.asdf/asdf.sh" ]]; then
   # Fallback to manual installation
   source "$HOME/.asdf/asdf.sh"
+  export PATH="$HOME/.asdf/shims:$PATH"
   fpath=(${ASDF_DIR}/completions $fpath)
 fi
 

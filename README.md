@@ -647,6 +647,39 @@ source ~/.zshrc
 
 ## 📝 Changelog
 
+### 2025-11-11 - ASDF v0.18.0 Compatibility Update
+
+#### Mejorado
+- **ASDF v0.18.0 Full Compatibility**: Todos los Makefiles optimizados para ASDF v0.18.0+
+- **Error Handling**: Mejor manejo de errores y códigos de salida en instalaciones
+- **Version Detection**: Detección automática de versión de ASDF y validación de compatibilidad
+- **Logging**: Logs de instalación guardados en `/tmp/` para debugging
+- **Reshim Support**: Nuevo comando `make reshim` para actualizar shims después de instalaciones manuales
+- **Plugin URLs**: URLs explícitas para plugins de Kubernetes (kind, kubectx, krew)
+- **Version Filtering**: Mejores filtros para seleccionar versiones estables (sin pre-releases)
+
+#### Añadido
+- Verificación de versión mínima de ASDF (v0.18.0+) en `check-asdf`
+- Comandos `asdf reshim` después de cada instalación
+- Output mejorado con códigos de color y progreso detallado
+- Nuevo target `reshim` en tools/Makefile para reshimming manual
+- Actualización de ASDF incluida en `make update`
+- Script `macos-setup` mejorado con mejor feedback y colores
+
+#### Corregido
+- Compatibilidad con `asdf list` que ahora retorna código 0 sin versiones
+- Manejo correcto de plugins que requieren URLs explícitas
+- Filtrado de versiones para evitar pre-releases y betas
+- Supresión de mensajes "already installed" duplicados
+- Mejor detección de errores en instalaciones fallidas
+
+#### Técnico
+- `asdf plugin add` ahora con URLs explícitas donde necesario
+- `asdf reshim` ejecutado después de cada `global`
+- `2>/dev/null` agregado a comandos que pueden fallar silenciosamente
+- Mejor uso de exit codes y validaciones
+- Logs de instalación redirigidos a archivos temporales
+
 ### 2025-11-11 - Major Update
 
 #### Cambiado
