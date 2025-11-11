@@ -59,7 +59,7 @@ set signcolumn=yes
 autocmd BufWritePre * :%s/\s\+$//e " Remove whitespaces on save
 
 " Plugins
-call plug#begin('~/.config/nvim/plugged')
+call plug#begin('~/.vim/plugged')
 
 " NerdTree
 Plug 'preservim/nerdtree'
@@ -67,24 +67,28 @@ nnoremap <leader>n :NERDTreeFocus<CR>
 nnoremap <C-n> :NERDTree<CR>
 nnoremap <C-t> :NERDTreeToggle<CR>
 nnoremap <C-f> :NERDTreeFind<CR>
-" autocmd VimEnter * NERDTree
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
 
-" FZF
+" FZF (install via: brew install fzf)
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+nnoremap <C-p> :Files<CR>
+nnoremap <leader>b :Buffers<CR>
+nnoremap <leader>f :Rg<CR>
 
-Plug 'prettier/vim-prettier', {
-  \ 'do': 'yarn install --frozen-lockfile --production',
-  \ 'for': ['javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue', 'svelte', 'yaml', 'html'] }
-
+" Status line
 Plug 'itchyny/lightline.vim'
 let g:lightline = {
       \ 'colorscheme': 'srcery_drk',
       \ 'active': {
       \   'left': [['mode', 'paste' ], ['readonly', 'filename', 'modified']],
       \   'right': [['lineinfo'], ['percent'], ['fileformat', 'fileencoding']]
-      \ }      
+      \ }
   \ }
+
+" Auto-formatting (native, no npm/yarn needed)
+autocmd FileType javascript,typescript,json setlocal tabstop=2 shiftwidth=2 expandtab
+autocmd FileType python setlocal tabstop=4 shiftwidth=4 expandtab
+autocmd FileType go setlocal tabstop=4 shiftwidth=4 noexpandtab
 
 call plug#end()

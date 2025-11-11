@@ -1,42 +1,46 @@
 .ONESHELL:
 .SHELL := /bin/sh
-.PHONY: help
+.PHONY: help all zsh neovim tmux
 .DEFAULT_GOAL := help
-CURRENT_FOLDER=$(shell basename "$$(pwd)")
-BOLD=$(shell tput bold)
-RED=$(shell tput setaf 1)
-RESET=$(shell tput sgr0)
+CURRENT_FOLDER = $(shell basename "$$(pwd)")
+BOLD = $(shell tput bold)
+RED = $(shell tput setaf 1)
+RESET = $(shell tput sgr0)
 
 ## Global
-NAME=profile
-VERSION=scratch
+NAME = profile
+VERSION = scratch
 
 ## Paths
-DOTFILES=${HOME}/.dotfiles
-PROFILE=${DOTFILES}/profile
+DOTFILES = ${HOME}/.dotfiles
+PROFILE = ${DOTFILES}/profile
 
-help:
+help: ## Show this help message
 	@echo ""
-	@echo "Klaatu Barata Nitko!"
+	@echo "$(BOLD)Profile Configuration for macOS$(RESET)"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-all: zsh neovim tmux
-	@echo "Local environment succesfully configured"
+all: zsh neovim tmux ## Install all profiles (ZSH, Neovim, Tmux)
+	@echo "✓ Local environment successfully configured for macOS"
 
-tmux:
-	@if [ -d "${HOME}/.tmux.git" ]; then rm -rf ${HOME}/.tmux.git; fi
-	@git clone https://github.com/gpakosz/.tmux.git ${HOME}/.tmux.git
-	@ln -s -f ${HOME}/.tmux.git/.tmux.conf ${HOME}/.tmux.conf
-	@ln -s -f ${HOME}/.tmux.git/.tmux.conf.local ${HOME}/.tmux.conf.local
+tmux: ## Install Tmux configuration
+	@echo "Installing Tmux configuration..."
+	@ln -s -f ${PROFILE}/tmux.conf ${HOME}/.tmux.conf
+	@ln -s -f ${PROFILE}/tmux.local ${HOME}/.tmux.conf.local
+	@echo "Tmux configuration installed!"
 
-zsh:
+zsh: ## Install ZSH configuration
+	@echo "Installing ZSH configuration..."
 	@if [ -f "${HOME}/.zshrc" ]; then rm ${HOME}/.zshrc; fi
 	@if [ -d "${HOME}/.zsh.d" ]; then rm -rf ${HOME}/.zsh.d; fi
-	@sh -c "ln -s -f ${PROFILE}/zshrc ${HOME}/.zshrc"
-	@sh -c "ln -s -f ${PROFILE}/zsh.d ${HOME}/.zsh.d"
+	@ln -s -f ${PROFILE}/zshrc ${HOME}/.zshrc
+	@ln -s -f ${PROFILE}/zsh.d ${HOME}/.zsh.d
+	@echo "ZSH configuration installed!"
 
-neovim:
-	@mkdir -p ~/.config/nvim
+neovim: ## Install Neovim/Vim configuration
+	@echo "Installing Neovim/Vim configuration..."
+	@mkdir -p ${HOME}/.config/nvim
 	@ln -s -f ${PROFILE}/vimrc ${HOME}/.config/nvim/init.vim
 	@ln -s -f ${PROFILE}/vimrc ${HOME}/.vimrc
+	@echo "Neovim/Vim configuration installed!"

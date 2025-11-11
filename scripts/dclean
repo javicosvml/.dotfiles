@@ -1,10 +1,34 @@
 #!/bin/bash
 
+# macOS-compatible Docker cleanup script
+
+echo "Cleaning up Docker resources..."
+
 # Remove exited containers
-docker rm -v $(docker ps -aq -f status=exited)
+EXITED_CONTAINERS=$(docker ps -aq -f status=exited)
+if [ -n "$EXITED_CONTAINERS" ]; then
+    echo "Removing exited containers..."
+    docker rm -v $EXITED_CONTAINERS
+else
+    echo "No exited containers to remove."
+fi
 
 # Remove dangling images
-docker rmi $(docker images -qf dangling=true)
+DANGLING_IMAGES=$(docker images -qf dangling=true)
+if [ -n "$DANGLING_IMAGES" ]; then
+    echo "Removing dangling images..."
+    docker rmi $DANGLING_IMAGES
+else
+    echo "No dangling images to remove."
+fi
 
 # Remove dangling volumes
-docker volume rm $(docker ps -aq -f status=exited)
+DANGLING_VOLUMES=$(docker volume ls -qf dangling=true)
+if [ -n "$DANGLING_VOLUMES" ]; then
+    echo "Removing dangling volumes..."
+    docker volume rm $DANGLING_VOLUMES
+else
+    echo "No dangling volumes to remove."
+fi
+
+echo "Docker cleanup complete!"
