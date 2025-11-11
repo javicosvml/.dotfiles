@@ -1,0 +1,300 @@
+#!/usr/bin/env python3
+"""
+Web Infrastructure Analyzer
+Analiza CDN, hosting, DNS, TLS y CMS de cualquier URL
+"""
+
+import sys
+import subprocess
+import json
+import re
+from urllib.parse import urlparse
+import socket
+
+
+class WebAnalyzer:
+    def __init__(self, url):
+        self.url = url
+        self.domain = self._extract_domain(url)
+        self.results = {}
+    
+    def _extract_domain(self, url):
+        """Extrae el dominio de la URL"""
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        parsed = urlparse(url)
+        return parsed.netloc or parsed.path
+    
+    def _run_command(self, command):
+        """Ejecuta un comando shell y retorna el output"""
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            return result.stdout.strip()
+        except Exception as e:
+            return f"Error: {str(e)}"
+    
+    def analyze_http_headers(self):
+        """Analiza headers HTTP"""
+        print("🌐 Analizando Headers HTTP...")
+        cmd = f"curl -sI https://{self.domain} | head -30"
+        output = self._run_command(cmd)
+        
+        headers = {}
+        for line in output.split('\n'):
+            if ':' in line:
+                key, value = line.split(':', 1)
+                headers[key.strip().lower()] = value.strip()
+        
+        self.results['headers'] = headers
+        
+        # Detectar servidor web
+        server = headers.get('server', 'Desconocido')
+        print(f"   └─ Servidor: {server}")
+        
+        # Detectar caché
+        cache_headers = [k for k in headers.keys() if 'cache' in k or 'varnish' in k]
+        if cache_headers:
+            print(f"   └─ Sistema de caché detectado: {', '.join(cache_headers)}")
+        
+        return headers
+    
+    def analyze_dns(self):
+        """Analiza configuración DNS"""
+        print("\n📡 Analizando DNS...")
+        
+        # A records
+        cmd = f"dig {self.domain} +short"
+        ips = self._run_command(cmd).split('\n')
+        
+        # Filtrar IPs válidas
+        ip_list = []
+        cname_list = []
+        for item in ips:
+            if item and not item.startswith(';'):
+                if re.match(r'\d+\.\d+\.\d+\.\d+', item):
+                    ip_list.append(item)
+                else:
+                    cname_list.append(item)
+        
+        print(f"   └─ IPs: {', '.join(ip_list[:5])}")
+        if cname_list:
+            print(f"   └─ CNAMEs: {', '.join(cname_list[:3])}")
+        
+        # Name servers
+        cmd = f"dig NS {self.domain.split('www.')[-1]} +short"
+        ns = self._run_command(cmd).split('\n')
+        ns = [n for n in ns if n]
+        print(f"   └─ Name Servers: {', '.join(ns[:3])}")
+        
+        self.results['dns'] = {
+            'ips': ip_list,
+            'cnames': cname_list,
+            'nameservers': ns
+        }
+        
+        return ip_list, cname_list, ns
+    
+    def analyze_tls(self):
+        """Analiza certificado TLS"""
+        print("\n🔒 Analizando Certificado TLS...")
+        
+        cmd = f"echo | openssl s_client -connect {self.domain}:443 -servername {self.domain} 2>/dev/null | openssl x509 -noout -text"
+        output = self._run_command(cmd)
+        
+        # Extraer información relevante
+        issuer = re.search(r'Issuer:(.+)', output)
+        subject = re.search(r'Subject:(.+)', output)
+        not_before = re.search(r'Not Before:\s*(.+)', output)
+        not_after = re.search(r'Not After\s*:\s*(.+)', output)
+        san = re.findall(r'DNS:([^\s,]+)', output)
+        
+        tls_info = {
+            'issuer': issuer.group(1).strip() if issuer else 'N/A',
+            'subject': subject.group(1).strip() if subject else 'N/A',
+            'valid_from': not_before.group(1).strip() if not_before else 'N/A',
+            'valid_until': not_after.group(1).strip() if not_after else 'N/A',
+            'san_domains': san
+        }
+        
+        print(f"   └─ Emisor: {tls_info['issuer']}")
+        print(f"   └─ Válido hasta: {tls_info['valid_until']}")
+        if san:
+            print(f"   └─ Dominios cubiertos: {', '.join(san[:5])}")
+        
+        self.results['tls'] = tls_info
+        return tls_info
+    
+    def detect_cms(self):
+        """Detecta el CMS utilizado"""
+        print("\n🔧 Detectando CMS...")
+        
+        cmd = f"curl -sL https://{self.domain} | grep -i -E '(wordpress|wp-content|drupal|joomla|generator|x-generator)' | head -20"
+        output = self._run_command(cmd)
+        
+        cms = "Desconocido"
+        if 'wordpress' in output.lower() or 'wp-content' in output.lower():
+            cms = "WordPress"
+        elif 'drupal' in output.lower():
+            match = re.search(r'Drupal\s+(\d+)', output, re.IGNORECASE)
+            cms = f"Drupal {match.group(1)}" if match else "Drupal"
+        elif 'joomla' in output.lower():
+            cms = "Joomla"
+        
+        print(f"   └─ CMS Detectado: {cms}")
+        self.results['cms'] = cms
+        return cms
+    
+    def analyze_hosting(self, ip):
+        """Analiza información del hosting mediante WHOIS"""
+        if not ip:
+            return None
+        
+        print("\n🏢 Analizando Hosting...")
+        
+        cmd = f"whois {ip} 2>&1 | grep -i -E '(org-name|netname|descr|origin|organization)' | head -10"
+        output = self._run_command(cmd)
+        
+        hosting_info = {}
+        for line in output.split('\n'):
+            if ':' in line:
+                key, value = line.split(':', 1)
+                hosting_info[key.strip()] = value.strip()
+        
+        # Extraer información clave
+        org_name = hosting_info.get('org-name', hosting_info.get('Organization', 'Desconocido'))
+        netname = hosting_info.get('netname', '')
+        asn = hosting_info.get('origin', '')
+        
+        print(f"   └─ Proveedor: {org_name}")
+        if netname:
+            print(f"   └─ Red: {netname}")
+        if asn:
+            print(f"   └─ ASN: {asn}")
+        
+        self.results['hosting'] = {
+            'provider': org_name,
+            'netname': netname,
+            'asn': asn,
+            'details': hosting_info
+        }
+        
+        return hosting_info
+    
+    def detect_cdn(self, headers, cnames):
+        """Detecta el CDN utilizado"""
+        print("\n🚀 Detectando CDN...")
+        
+        cdn = "No detectado"
+        cdn_indicators = {
+            'Cloudflare': ['cloudflare', 'cf-ray'],
+            'Fastly': ['fastly', 'x-fastly'],
+            'Akamai': ['akamai'],
+            'Amazon CloudFront': ['cloudfront', 'x-amz-cf'],
+            'TransparentEdge': ['transparentedge', 'edge2befaster', 'edgetcdn', 'tp-cache'],
+            'KeyCDN': ['keycdn'],
+            'StackPath': ['stackpath'],
+            'Varnish': ['varnish', 'x-varnish']
+        }
+        
+        detected_cdns = []
+        
+        # Buscar en headers
+        headers_str = ' '.join([f"{k}:{v}" for k, v in headers.items()]).lower()
+        for cdn_name, indicators in cdn_indicators.items():
+            if any(indicator in headers_str for indicator in indicators):
+                detected_cdns.append(cdn_name)
+        
+        # Buscar en CNAMEs
+        cnames_str = ' '.join(cnames).lower()
+        for cdn_name, indicators in cdn_indicators.items():
+            if any(indicator in cnames_str for indicator in indicators):
+                if cdn_name not in detected_cdns:
+                    detected_cdns.append(cdn_name)
+        
+        if detected_cdns:
+            cdn = ', '.join(detected_cdns)
+        
+        print(f"   └─ CDN: {cdn}")
+        self.results['cdn'] = cdn
+        return cdn
+    
+    def analyze(self):
+        """Ejecuta análisis completo"""
+        print(f"\n{'='*60}")
+        print(f"🔍 ANÁLISIS DE: {self.domain}")
+        print(f"{'='*60}")
+        
+        # Análisis en orden
+        headers = self.analyze_http_headers()
+        ips, cnames, ns = self.analyze_dns()
+        self.analyze_tls()
+        self.detect_cms()
+        self.detect_cdn(headers, cnames)
+        
+        if ips:
+            self.analyze_hosting(ips[0])
+        
+        return self.results
+    
+    def print_summary(self):
+        """Imprime resumen del análisis"""
+        print(f"\n{'='*60}")
+        print("📋 RESUMEN DEL ANÁLISIS")
+        print(f"{'='*60}")
+        
+        print(f"\n🌐 Dominio: {self.domain}")
+        print(f"🔧 CMS: {self.results.get('cms', 'N/A')}")
+        print(f"🚀 CDN: {self.results.get('cdn', 'N/A')}")
+        
+        if 'hosting' in self.results:
+            print(f"🏢 Hosting: {self.results['hosting'].get('provider', 'N/A')}")
+        
+        if 'dns' in self.results:
+            print(f"📡 Name Servers: {', '.join(self.results['dns']['nameservers'][:2])}")
+        
+        if 'tls' in self.results:
+            issuer = self.results['tls']['issuer']
+            # Extraer solo el CN del issuer
+            cn_match = re.search(r'CN\s*=\s*([^,]+)', issuer)
+            issuer_name = cn_match.group(1) if cn_match else issuer
+            print(f"🔒 Certificado TLS: {issuer_name}")
+        
+        print(f"\n{'='*60}")
+    
+    def save_json(self, filename=None):
+        """Guarda resultados en JSON"""
+        if filename is None:
+            filename = f"{self.domain.replace('.', '_')}_analysis.json"
+        
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(self.results, f, indent=2, ensure_ascii=False)
+        
+        print(f"\n💾 Resultados guardados en: {filename}")
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Uso: python web_analyzer.py <URL>")
+        print("Ejemplo: python web_analyzer.py www.contraelcancer.es")
+        sys.exit(1)
+    
+    url = sys.argv[1]
+    
+    analyzer = WebAnalyzer(url)
+    analyzer.analyze()
+    analyzer.print_summary()
+    
+    # Preguntar si guardar JSON
+    save = input("\n¿Guardar resultados en JSON? (s/n): ").lower()
+    if save == 's':
+        analyzer.save_json()
+
+
+if __name__ == "__main__":
+    main()

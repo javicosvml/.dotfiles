@@ -1,8 +1,0 @@
-export CLAUDE_CODE_USE_BEDROCK=1
-export AWS_REGION=us-east-1
-
-# Haiku
-export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:925629192986:inference-profile/anthropic.claude-haiku-4-5-20251001-v1:0'
-# OPUS
-# export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:925629192986:inference-profile/us.anthropic.claude-opus-4-20250514-v1:0'
-
