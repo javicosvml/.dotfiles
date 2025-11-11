@@ -55,49 +55,24 @@ if command -v procs &>/dev/null; then
   alias ps='procs'
 fi
 
-# Git aliases (commonly used)
-alias g='git'
-alias ga='git add'
-alias gc='git commit'
-alias gp='git push'
-alias gl='git pull'
-alias gst='git status'
-alias gd='git diff'
-alias gco='git checkout'
-alias gb='git branch'
-alias glog='git log --oneline --graph --decorate'
-
 # macOS specific aliases
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Show/hide hidden files in Finder
   alias showfiles='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder'
   alias hidefiles='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder'
-  
+
   # Flush DNS cache
   alias flushdns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
-  
+
   # Lock screen
   alias afk='/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend'
-  
+
   # Quick look file
   alias ql='qlmanage -p 2>/dev/null'
-  
+
   # Open in default app
   alias o='open'
   alias o.='open .'
-fi
-
-# Kubernetes aliases (if kubectl is available)
-if command -v kubectl &>/dev/null; then
-  alias k='kubectl'
-  alias kgp='kubectl get pods'
-  alias kgs='kubectl get svc'
-  alias kgd='kubectl get deployments'
-  alias kdp='kubectl describe pod'
-  alias kds='kubectl describe svc'
-  alias kdd='kubectl describe deployment'
-  alias kl='kubectl logs'
-  alias klf='kubectl logs -f'
 fi
 
 # Safety aliases - prevent accidental overwrites
@@ -109,13 +84,6 @@ alias rm='rm -i'
 alias ip='curl -s ifconfig.me'
 alias localip='ipconfig getifaddr en0'
 alias ports='lsof -i -P | grep LISTEN'
-
-# Directory navigation shortcuts
-alias ..='cd ..'
-alias ...='cd ../..'
-alias ....='cd ../../..'
-alias ~='cd ~'
-alias -- -='cd -'
 
 # Quick edits
 alias zshrc='$EDITOR ~/.zshrc'
