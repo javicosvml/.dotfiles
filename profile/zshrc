@@ -1,255 +1,37 @@
 # ~/.zshrc - Zsh configuration file for interactive shells
-# Optimized for macOS with Kitty terminal
 
-# TMUX: Auto-start tmux before instant prompt to avoid warnings
-# Only start if not already in tmux, not in VSCode
+# TMUX: Auto-start before instant prompt to avoid warnings
 if [[ -z "$TMUX" ]] && [[ -z "$VSCODE_INJECTION" ]] && [[ -o login ]]; then
   if command -v tmux &>/dev/null; then
-    # Attach to existing session named 'main' or create new one
     exec tmux new-session -A -s main
   fi
 fi
 
-# Enable Powerlevel10k instant prompt (must be at the top)
-# Should stay close to the top of ~/.zshrc for instant prompt to work correctly
+# Enable Powerlevel10k instant prompt (must be near top)
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# Zinit: Plugin manager for Zsh - https://github.com/zdharma-continuum/zinit
+# Zinit: Plugin manager initialization
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 if [[ ! -d $ZINIT_HOME ]]; then
   mkdir -p "$(dirname $ZINIT_HOME)"
   git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 fi
-
-# Initialize Zinit
 source "${ZINIT_HOME}/zinit.zsh"
 
-# ------------------------------
-# Paths and Environment Variables
-# ------------------------------
+# Load modular configuration files
+ZSH_CONFIG_DIR="${HOME}/.zsh.d"
 
-# Homebrew paths (macOS specific)
-if [[ "$(uname -m)" == "arm64" ]]; then
-  # Apple Silicon (M1/M2/M3)
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-else
-  # Intel Mac
-  eval "$(/usr/local/bin/brew shellenv)"
-fi
+source "${ZSH_CONFIG_DIR}/env.zsh"        # Environment variables and paths
+source "${ZSH_CONFIG_DIR}/options.zsh"    # Zsh options (navigation, etc.)
+source "${ZSH_CONFIG_DIR}/history.zsh"    # History configuration
+source "${ZSH_CONFIG_DIR}/plugins.zsh"    # Zinit plugins and themes
+source "${ZSH_CONFIG_DIR}/completion.zsh" # Autocompletion settings
+source "${ZSH_CONFIG_DIR}/colors.zsh"     # Color configuration
+source "${ZSH_CONFIG_DIR}/kitty.zsh"      # Kitty terminal integration
+source "${ZSH_CONFIG_DIR}/alias.zsh"      # Custom aliases
+source "${ZSH_CONFIG_DIR}/tools.zsh"      # Tool integrations
 
-# Add directories to PATH (ordered by priority)
-export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
-
-# Man paths
-export MANPATH="$MANPATH:/usr/local/man"
-
-# Locale configuration (UTF-8 support)
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-
-# Kitty terminal configuration
-export TERM="xterm-256color"
-export COLORTERM="truecolor"
-
-# Editor preferences
-export EDITOR="nvim"
-export VISUAL="nvim"
-
-# ------------------------------
-# History configuration
-# ------------------------------
-
-# History variables
-HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
-HIST_STAMPS="yyyy-mm-dd"
-
-# History options
-setopt EXTENDED_HISTORY          # Write timestamp to history file
-setopt HIST_EXPIRE_DUPS_FIRST   # Expire duplicates first
-setopt HIST_FIND_NO_DUPS        # Do not display duplicates in search
-setopt HIST_IGNORE_ALL_DUPS     # Delete old recorded entry if new entry is a duplicate
-setopt HIST_IGNORE_DUPS         # Don't record an entry that was just recorded
-setopt HIST_IGNORE_SPACE        # Don't record entries starting with space
-setopt HIST_REDUCE_BLANKS       # Remove superfluous blanks
-setopt HIST_SAVE_NO_DUPS        # Don't write duplicate entries in history file
-setopt HIST_VERIFY              # Don't execute immediately upon history expansion
-setopt INC_APPEND_HISTORY       # Write to history file immediately
-setopt SHARE_HISTORY            # Share history between sessions
-
-# Navigation options
-setopt AUTO_CD                  # Change to directory without cd
-setopt AUTO_PUSHD              # Push old directory onto stack
-setopt PUSHD_IGNORE_DUPS       # Don't push duplicates
-setopt PUSHD_MINUS             # Exchange meaning of +/-
-
-# Completion options
-setopt ALWAYS_TO_END           # Move cursor to end after completion
-setopt AUTO_LIST               # Automatically list choices on ambiguous completion
-setopt AUTO_MENU               # Show completion menu on successive tab press
-setopt COMPLETE_IN_WORD        # Allow completion from within a word
-setopt LIST_PACKED             # Make completion list smaller
-
-# ------------------------------
-# Aliases and Custom Functions
-# ------------------------------
-
-# Load custom aliases and functions
-source ~/.zsh.d/alias.zsh
-source ~/.zsh.d/tools.zsh
-
-# ------------------------------
-# Zinit Plugins
-# ------------------------------
-
-# Syntax highlighting (must be loaded before autosuggestions)
-zinit light zdharma-continuum/fast-syntax-highlighting
-
-# Autosuggestions
-zinit light zsh-users/zsh-autosuggestions
-export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
-export ZSH_AUTOSUGGEST_USE_ASYNC=1
-
-# Completions
-zinit light zsh-users/zsh-completions
-
-# History search
-zinit light zdharma-continuum/history-search-multi-word
-
-# Kubernetes prompt (if using kubectl)
-if command -v kubectl &>/dev/null; then
-  zinit light superbrothers/zsh-kubectl-prompt
-fi
-
-# macOS specific plugins
-# Note: Disabled broken OMZ macos plugin - clipboard already works natively
-
-# Load Powerlevel10k theme (better than Pure for Kitty)
-zinit ice depth=1
-zinit light romkatv/powerlevel10k
-
-# ------------------------------
-# Prompt Configuration
-# ------------------------------
-
-# Powerlevel10k configuration
-# To customize, run: p10k configure
-[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
-
-# Kubectl prompt configuration (if using k8s)
-if [[ -d $HOME/.kube ]]; then
-  zstyle ':zsh-kubectl-prompt:' separator '|'
-fi
-
-# ------------------------------
-# Autocompletion Configuration
-# ------------------------------
-
-# Configure autocompletion in Zsh
-autoload -Uz compinit
-
-# On macOS, check compdump once a day for performance
-# This speeds up shell startup significantly
-if [[ -n ${HOME}/.zcompdump(#qN.mh+24) ]]; then
-  compinit
-else
-  compinit -C
-fi
-
-# Bash compatibility
-autoload -Uz bashcompinit && bashcompinit
-
-# Zinit completions
-autoload -Uz _zinit
-(( ${+_comps} )) && _comps[zinit]=_zinit
-
-# Autocompletion styling
-zstyle ':completion:*' menu select                          # Select completions with arrow keys
-zstyle ':completion:*' group-name ''                        # Group results by category
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'  # Case insensitive completion
-zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"    # Colorize completions
-zstyle ':completion:*' special-dirs true                    # Complete . and .. special directories
-zstyle ':completion:*' rehash true                          # Automatically find new executables in path
-
-# Completion descriptions
-zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
-zstyle ':completion:*:warnings' format '%F{red}-- no matches found --%f'
-zstyle ':completion:*:messages' format '%F{purple}-- %d --%f'
-zstyle ':completion:*:corrections' format '%F{green}-- %d (errors: %e) --%f'
-
-# Completion order
-zstyle ':completion:::::' completer _expand _complete _ignored _approximate
-
-# Makefile completion
-zstyle ':completion:*:make:*:targets' call-command true
-zstyle ':completion:*:make:*' tag-order targets
-
-# Process completion
-zstyle ':completion:*:*:kill:*' menu yes select
-zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
-zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
-
-# ------------------------------
-# Color Support (optimized for Kitty)
-# ------------------------------
-
-# Configure colors for the 'less' pager
-export LESS_TERMCAP_mb=$'\E[1;31m'     # Begin bold - red
-export LESS_TERMCAP_md=$'\E[1;36m'     # Begin blink - cyan
-export LESS_TERMCAP_me=$'\E[0m'        # End mode
-export LESS_TERMCAP_so=$'\E[01;44;33m' # Begin standout - yellow on blue
-export LESS_TERMCAP_se=$'\E[0m'        # End standout
-export LESS_TERMCAP_us=$'\E[1;32m'     # Begin underline - green
-export LESS_TERMCAP_ue=$'\E[0m'        # End underline
-
-# Less options
-export LESS='-R -M -i -j10'
-export LESSCHARSET='utf-8'
-
-# macOS-specific color configuration
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # Enable colors for macOS ls
-    export CLICOLOR=1
-    export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd
-    
-    # If GNU coreutils are installed (brew install coreutils)
-    if command -v gdircolors >/dev/null 2>&1; then
-        if [[ -r ~/.dircolors ]]; then
-            eval "$(gdircolors -b ~/.dircolors)"
-        else
-            eval "$(gdircolors -b)"
-        fi
-        alias ls="gls --color=auto --group-directories-first"
-        zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
-    fi
-    
-    # Colored grep output
-    export GREP_COLOR='1;32'
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
-fi
-
-# ------------------------------
-# Kitty Terminal Integration
-# ------------------------------
-
-# Kitty-specific configurations
-if [[ "$TERM" == "xterm-kitty" ]]; then
-    # Note: shell_integration disabled in kitty.conf to avoid conflicts with tmux/p10k
-    # If needed, enable with: shell_integration enabled in kitty.conf
-    
-    # Kitty SSH integration
-    alias ssh="kitty +kitten ssh"
-    
-    # Image viewing in terminal
-    alias icat="kitty +kitten icat"
-    
-    # Diff with images support
-    alias d="kitty +kitten diff"
-fi
-
+# direnv hook
+eval "$(direnv hook zsh)"

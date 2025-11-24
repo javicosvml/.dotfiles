@@ -1,0 +1,49 @@
+# Autocompletion Configuration
+
+# Initialize completion system
+autoload -Uz compinit
+
+# On macOS, check compdump once a day for performance
+if [[ -n ${HOME}/.zcompdump(#qN.mh+24) ]]; then
+  compinit
+else
+  compinit -C
+fi
+
+# Bash compatibility
+autoload -Uz bashcompinit && bashcompinit
+
+# Zinit completions
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
+
+# Completion styling
+zstyle ':completion:*' menu select                          # Select completions with arrow keys
+zstyle ':completion:*' group-name ''                        # Group results by category
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'   # Case insensitive completion
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"     # Colorize completions
+zstyle ':completion:*' special-dirs true                    # Complete . and .. special directories
+zstyle ':completion:*' rehash true                          # Automatically find new executables in path
+
+# Completion descriptions
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
+zstyle ':completion:*:warnings' format '%F{red}-- no matches found --%f'
+zstyle ':completion:*:messages' format '%F{purple}-- %d --%f'
+zstyle ':completion:*:corrections' format '%F{green}-- %d (errors: %e) --%f'
+
+# Completion order
+zstyle ':completion:::::' completer _expand _complete _ignored _approximate
+
+# Makefile completion
+zstyle ':completion:*:make:*:targets' call-command true
+zstyle ':completion:*:make:*' tag-order targets
+
+# Process completion
+zstyle ':completion:*:*:kill:*' menu yes select
+zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
+zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
+
+# Kubectl prompt configuration (if using k8s)
+if [[ -d $HOME/.kube ]]; then
+  zstyle ':zsh-kubectl-prompt:' separator '|'
+fi
