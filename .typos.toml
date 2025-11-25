@@ -1,0 +1,22 @@
+# Typos configuration
+# https://github.com/crate-ci/typos
+
+[default]
+extend-ignore-identifiers-re = [
+    # Git aliases
+    "ba",
+    # Terminal escape sequences
+    "ue",
+    "us",
+    "mb",
+    "md",
+    "me",
+    "so",
+    "se",
+]
+
+[files]
+extend-exclude = [
+    "*.lock",
+    "lazy-lock.json",
+]

@@ -1,29 +1,15 @@
-#!/usr/bin/env python3
+#!/bin/bash
+# Generate random passwords
 
-import random
-import string
+LENGTH=${1:-16}
 
-def generate_random_password(length=12):
-    """
-    Generate a random password with letters, digits, and symbols.
+if ! [[ "$LENGTH" =~ ^[0-9]+$ ]] || [ "$LENGTH" -lt 8 ] || [ "$LENGTH" -gt 128 ]; then
+    echo "Usage: passwdgen [length]"
+    echo "  length: 8-128 (default: 16)"
+    exit 1
+fi
 
-    Parameters:
-    - length (int): Length of the password (default is 12).
+# Generate password using openssl
+PASSWORD=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9!@#$%^&*' | head -c "$LENGTH")
 
-    Returns:
-    - str: Generated password.
-    """
-    password_characters = string.ascii_letters + string.digits + string.punctuation
-    password = ''.join(random.choice(password_characters) for _ in range(length))
-    return password
-
-def main():
-    # Set the desired password length
-    password_length = 16
-
-    # Generate and print a random password
-    random_password = generate_random_password(password_length)
-    print("Random Password:", random_password)
-
-if __name__ == "__main__":
-    main()
+echo "Password ($LENGTH chars): $PASSWORD"

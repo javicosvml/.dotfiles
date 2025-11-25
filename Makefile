@@ -94,7 +94,7 @@ kitty: brew ## Install Kitty terminal emulator and configuration
 	@ln -sf $(DOTFILES)/config/kitty/kitty.conf $(KITTY_CONFIG)/kitty.conf
 	@echo "$(GREEN)✓ Kitty configuration linked$(RESET)"
 	@echo ""
-	@echo "$(GREEN)$(BOLD)✓ Kitty setup complete!$(RESET)"	
+	@echo "$(GREEN)$(BOLD)✓ Kitty setup complete!$(RESET)"
 
 asdf: brew ## Install ASDF version manager (v0.18.0+ from Homebrew)
 	@echo "$(BOLD)Installing ASDF version manager...$(RESET)"

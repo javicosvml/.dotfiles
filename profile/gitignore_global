@@ -1,0 +1,192 @@
+# Global Git Ignore
+# Symlinked to ~/.gitignore_global
+# These patterns are ignored in ALL repositories
+
+# =============================================================================
+# macOS
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon?
+.fseventsd
+
+# =============================================================================
+# Windows
+# =============================================================================
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# =============================================================================
+# Linux
+# =============================================================================
+*~
+.directory
+.Trash-*
+
+# =============================================================================
+# Editors and IDEs
+# =============================================================================
+
+# VS Code
+.vscode/
+*.code-workspace
+.history/
+
+# JetBrains (IntelliJ, PyCharm, WebStorm, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.idea_modules/
+
+# Vim/Neovim
+*.swp
+*.swo
+*.swn
+*~
+.netrwhist
+Session.vim
+.vim/
+tags
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# TextMate
+*.tmproj
+*.tmproject
+tmtags
+
+# Xcode
+*.xcuserstate
+*.xcuserdatad
+xcuserdata/
+DerivedData/
+
+# =============================================================================
+# Languages and Runtimes
+# =============================================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+.env.local
+*.egg-info/
+.eggs/
+*.egg
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn/cache
+.yarn/unplugged
+.pnpm-store/
+
+# Ruby
+*.gem
+.bundle/
+vendor/bundle
+
+# Go
+/vendor/
+
+# Rust
+/target/
+Cargo.lock
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# =============================================================================
+# Build and Dependency Directories
+# =============================================================================
+build/
+dist/
+out/
+target/
+*.o
+*.a
+*.lib
+*.dll
+*.dylib
+
+# =============================================================================
+# Logs and Databases
+# =============================================================================
+*.log
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+# =============================================================================
+# Environment and Secrets
+# =============================================================================
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+*.crt
+*.p12
+.credentials
+credentials.json
+secrets.json
+*.secret
+
+# =============================================================================
+# Misc
+# =============================================================================
+*.bak
+*.tmp
+*.temp
+*.cache
+.cache/
+*.pid
+*.seed
+.grunt
+.lock-wscript
+.sass-cache/
+coverage/
+.nyc_output/
+*.lcov
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log

@@ -180,4 +180,3 @@ clean: ## Remove unused ASDF versions
 		asdf list $$plugin 2>/dev/null | grep -v '*' | xargs -I {} asdf uninstall $$plugin {} 2>/dev/null || true; \
 	done
 	@echo "$(GREEN)✓ Cleanup complete$(RESET)"
-
