@@ -37,7 +37,16 @@
       "Bash(/usr/bin/grep -v varcon)",
       "Bash(/usr/bin/grep 'refs/tags/v1')",
       "Bash(/usr/bin/grep:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(lsd:*)",
+      "Bash(mount)",
+      "Bash(kubectl config current-context:*)",
+      "Bash(/bin/ls:*)",
+      "Bash(pgrep:*)",
+      "WebFetch(domain:shields.io)",
+      "Bash(git config:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []

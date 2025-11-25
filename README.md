@@ -1,92 +1,239 @@
-# Dotfiles
+<div align="center">
 
-Personal macOS development environment configuration.
+# ~/.dotfiles
 
-## Tech Stack
+**My personal macOS development environment**
 
-| Component | Tool | Description |
-|-----------|------|-------------|
-| **Shell** | [ZSH](https://www.zsh.org/) + [Zinit](https://github.com/zdharma-continuum/zinit) | Modern shell with plugin manager |
-| **Prompt** | [Powerlevel10k](https://github.com/romkatv/powerlevel10k) | Fast, customizable prompt |
-| **Terminal** | [Kitty](https://sw.kovidgoyal.net/kitty/) | GPU-accelerated terminal |
-| **Multiplexer** | [Tmux](https://github.com/tmux/tmux) | Terminal multiplexer |
-| **Editor** | [Neovim](https://neovim.io/) + [lazy.nvim](https://github.com/folke/lazy.nvim) | Modern Vim with Lua config |
-| **Version Manager** | [ASDF](https://asdf-vm.com/) | Multi-language version manager |
-| **Package Manager** | [Homebrew](https://brew.sh/) | macOS package manager |
+*Meticulously crafted configuration for a productive and beautiful terminal experience*
 
-## Quick Start
+[![macOS](https://img.shields.io/badge/macOS-Ventura%2B-black?style=flat-square&logo=apple&logoColor=white)](https://www.apple.com/macos/)
+[![Shell](https://img.shields.io/badge/Shell-ZSH-green?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.zsh.org/)
+[![Neovim](https://img.shields.io/badge/Editor-Neovim-57A143?style=flat-square&logo=neovim&logoColor=white)](https://neovim.io/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+
+<br>
+
+[Features](#-features) •
+[Installation](#-installation) •
+[What's Included](#-whats-included) •
+[Documentation](#-documentation) •
+[Customization](#-customization)
+
+<br>
+
+<!-- Add your terminal screenshot here -->
+<!-- ![Terminal Preview](assets/preview.png) -->
+
+</div>
+
+---
+
+## Features
+
+<table>
+<tr>
+<td width="50%">
+
+### Terminal & Shell
+- **ZSH** with [Zinit](https://github.com/zdharma-continuum/zinit) plugin manager
+- **[Powerlevel10k](https://github.com/romkatv/powerlevel10k)** instant prompt
+- **[Kitty](https://sw.kovidgoyal.net/kitty/)** GPU-accelerated terminal
+- **[Tmux](https://github.com/tmux/tmux)** with [gpakosz/.tmux](https://github.com/gpakosz/.tmux) base
+
+</td>
+<td width="50%">
+
+### Editor & Development
+- **[Neovim](https://neovim.io/)** with Lua configuration
+- **[lazy.nvim](https://github.com/folke/lazy.nvim)** plugin manager
+- **LSP** with auto-install via [Mason](https://github.com/williamboman/mason.nvim)
+- **[ASDF](https://asdf-vm.com/)** multi-language version manager
+
+</td>
+</tr>
+</table>
+
+### Highlights
+
+| Feature | Description |
+|---------|-------------|
+| **Modular Design** | Organized configs with `zsh.d/` and `conf.d/` includes |
+| **One-Command Install** | Get up and running with a single `make` command |
+| **Modern CLI Tools** | `bat`, `lsd`, `fd`, `ripgrep`, `fzf` aliases built-in |
+| **Auto-Tmux** | Automatically attaches to tmux session on login |
+| **Dracula Theme** | Consistent theming across all tools |
+
+---
+
+## Installation
+
+> [!IMPORTANT]
+> Review the code before running. These are **my** personal dotfiles. Fork and customize!
+
+### Prerequisites
+
+- macOS Ventura 13.0+
+- Apple Silicon (M1/M2/M3/M4) or Intel Mac
+- Xcode Command Line Tools
 
 ```bash
-# Clone repository
-git clone https://github.com/yourusername/dotfiles.git ~/.dotfiles
+xcode-select --install
+```
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/jcc-tck/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
-# Install Homebrew (if not installed)
+# Install everything
+make all
+```
+
+### Step-by-Step Installation
+
+```bash
+# 1. Install Homebrew
 make brew
 
-# Install ASDF version manager
+# 2. Install ASDF version manager
 make asdf && source ~/.zshrc
 
-# Install shell/editor configs
+# 3. Install shell/editor configurations
 make profile
 
-# Install dev tools (Python, Node.js, Go, etc.)
+# 4. Install development tools (Python, Node.js, Go, etc.)
 make tools
 
-# (Optional) Install Kitty terminal
+# 5. (Optional) Install Kitty terminal
 make kitty
 ```
 
-## Documentation
+---
 
-| Document | Description |
-|----------|-------------|
-| [ZSH](doc/zsh.md) | Shell setup, plugins, aliases |
-| [Tmux](doc/tmux.md) | Multiplexer keybindings, theme |
-| [Kitty](doc/kitty.md) | Terminal settings, shortcuts |
-| [Neovim](doc/nvim.md) | Editor plugins, LSP, keymaps |
+## What's Included
 
-## Repository Structure
+### Tech Stack
+
+| Component | Tool | Description |
+|:---------:|:----:|:------------|
+| <img src="https://www.vectorlogo.zone/logos/gnu_bash/gnu_bash-icon.svg" width="20"> | **[ZSH](https://www.zsh.org/)** | Shell with [Zinit](https://github.com/zdharma-continuum/zinit) plugins |
+| <img src="https://raw.githubusercontent.com/romkatv/powerlevel10k-media/master/prompt-styles-high-contrast.png" width="20"> | **[Powerlevel10k](https://github.com/romkatv/powerlevel10k)** | Lightning-fast prompt |
+| <img src="https://sw.kovidgoyal.net/kitty/_static/kitty.svg" width="20"> | **[Kitty](https://sw.kovidgoyal.net/kitty/)** | GPU-accelerated terminal |
+| <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Tmux_logo.svg" width="20"> | **[Tmux](https://github.com/tmux/tmux)** | Terminal multiplexer |
+| <img src="https://www.vectorlogo.zone/logos/neovimio/neovimio-icon.svg" width="20"> | **[Neovim](https://neovim.io/)** | Modern Vim with LSP |
+| <img src="https://avatars.githubusercontent.com/u/42918198" width="20"> | **[ASDF](https://asdf-vm.com/)** | Version manager for everything |
+| <img src="https://brew.sh/assets/img/homebrew-256x256.png" width="20"> | **[Homebrew](https://brew.sh/)** | macOS package manager |
+
+### Repository Structure
 
 ```
 ~/.dotfiles/
-├── README.md
-├── CLAUDE.md              # AI assistant context
-├── Makefile               # Main installer
-├── doc/                   # Documentation
-│   ├── zsh.md
-│   ├── tmux.md
-│   ├── kitty.md
-│   └── nvim.md
+├── Makefile                    # Main installer
 ├── config/
-│   └── kitty/             # Kitty terminal
-│       ├── kitty.conf
-│       ├── conf.d/        # Modular configs
-│       └── themes/        # Color themes
+│   └── kitty/                  # Kitty terminal
+│       ├── kitty.conf          # Main config
+│       ├── conf.d/             # Modular: fonts, keys, macos
+│       └── themes/             # Color themes
 ├── profile/
-│   ├── Makefile
-│   ├── zshrc              # ZSH main config
-│   ├── zsh.d/             # Modular ZSH configs
-│   ├── nvim/              # Neovim (Lua-based)
-│   ├── tmux.conf          # Tmux base config
-│   ├── tmux.local         # Tmux customizations
-│   ├── gitconfig
-│   ├── gitignore_global
-│   └── editorconfig
+│   ├── zshrc                   # ZSH main config
+│   ├── zsh.d/                  # Modular ZSH configs
+│   │   ├── env.zsh             # Environment & PATH
+│   │   ├── plugins.zsh         # Zinit plugins
+│   │   ├── alias.zsh           # Shell aliases
+│   │   └── ...                 # More modules
+│   ├── nvim/                   # Neovim (Lua-based)
+│   │   ├── init.lua            # Entry point
+│   │   └── lua/
+│   │       ├── config/         # Options, keymaps
+│   │       └── plugins/        # LSP, treesitter, etc.
+│   ├── tmux.conf               # Tmux base config
+│   ├── tmux.local              # Tmux customizations
+│   ├── gitconfig               # Git configuration
+│   └── editorconfig            # Editor settings
 ├── tools/
-│   └── Makefile           # ASDF tool installer
-└── scripts/
-    ├── dclean             # Docker cleanup
-    ├── kleanup            # Kubernetes cleanup
-    └── passwdgen          # Password generator
+│   └── Makefile                # ASDF tool installer
+├── scripts/                    # Utility scripts
+│   ├── dclean                  # Docker cleanup
+│   ├── kleanup                 # Kubernetes cleanup
+│   └── passwdgen               # Password generator
+└── doc/                        # Documentation
 ```
 
-## Make Targets
+---
+
+## Documentation
+
+Detailed documentation for each component:
+
+| Document | Description |
+|:---------|:------------|
+| **[ZSH](doc/zsh.md)** | Shell configuration, plugins, and aliases |
+| **[Neovim](doc/nvim.md)** | Editor setup, LSP, keybindings |
+| **[Tmux](doc/tmux.md)** | Multiplexer keybindings and theme |
+| **[Kitty](doc/kitty.md)** | Terminal settings and shortcuts |
+
+---
+
+## Customization
+
+<details>
+<summary><strong>Change Neovim Theme</strong></summary>
+
+Edit `profile/nvim/lua/plugins/editor.lua`:
+
+```lua
+-- Switch from Dracula to TokyoNight
+{
+  "folke/tokyonight.nvim",
+  lazy = false,
+  priority = 1000,
+  opts = { style = "night" },
+  config = function(_, opts)
+    require("tokyonight").setup(opts)
+    vim.cmd.colorscheme("tokyonight")
+  end,
+},
+```
+</details>
+
+<details>
+<summary><strong>Add ZSH Aliases</strong></summary>
+
+Edit `profile/zsh.d/alias.zsh`:
+
+```bash
+# Add your custom aliases
+alias myalias='command here'
+```
+</details>
+
+<details>
+<summary><strong>Change Kitty Theme</strong></summary>
+
+Edit `config/kitty/kitty.conf`:
+
+```conf
+# Available: dracula, tokyonight, nord, material-dark
+include themes/tokyonight.conf
+```
+</details>
+
+<details>
+<summary><strong>Modify Tmux Theme</strong></summary>
+
+Edit `profile/tmux.local` to customize colors and status bar.
+</details>
+
+---
+
+## Make Commands
 
 ### Main Makefile
 
 ```bash
-make help       # Show all targets
+make help       # Show all available targets
 make all        # Install everything
 make brew       # Install Homebrew
 make asdf       # Install ASDF
@@ -95,96 +242,87 @@ make tools      # Install dev tools
 make kitty      # Install Kitty terminal
 ```
 
-### Tools Makefile (tools/)
+### Tools Makefile (`tools/`)
 
 ```bash
-make all        # Python, Node.js, Go, Terraform, K8s
-make python     # Python (latest)
-make nodejs     # Node.js (latest)
-make golang     # Go (latest)
-make terraform  # Terraform
-make kubernetes # kubectl, helm, kind, kubectx
-make aws        # AWS CLI
-make gcloud     # Google Cloud SDK
-make list       # List installed tools
-make update     # Update ASDF plugins
+make all         # Python, Node.js, Go, Terraform, K8s
+make python      # Python (latest)
+make nodejs      # Node.js (latest)
+make golang      # Go (latest)
+make terraform   # Terraform
+make kubernetes  # kubectl, helm, kind, kubectx
+make list        # List installed tools
+make update      # Update ASDF plugins
 ```
 
-## Features
+---
 
-### Shell (ZSH)
-- Powerlevel10k instant prompt
-- Syntax highlighting & autosuggestions
-- Modern CLI aliases (bat, lsd, fd, ripgrep)
-- Auto-tmux on login
-- FZF fuzzy finder integration
-
-### Editor (Neovim)
-- lazy.nvim plugin manager
-- LSP with Mason auto-install
-- Treesitter syntax highlighting
-- Telescope fuzzy finder
-- Dracula theme
-
-### Terminal (Kitty)
-- GPU-accelerated rendering
-- True color support
-- Font ligatures
-- Tmux-optimized
-
-### Multiplexer (Tmux)
-- Dracula theme
-- Vim-aware navigation
-- Mouse support
-- Battery & time display
-
-## Scripts
+## Utility Scripts
 
 | Script | Description |
-|--------|-------------|
-| `dclean` | Remove stopped Docker containers, dangling images/volumes |
-| `kleanup` | Remove old Kubernetes ReplicaSets, completed Jobs, evicted Pods |
-| `passwdgen` | Generate random passwords (`passwdgen [length]`) |
+|:-------|:------------|
+| `dclean` | Remove stopped Docker containers, dangling images & volumes |
+| `kleanup` | Clean up old Kubernetes ReplicaSets, completed Jobs, evicted Pods |
+| `passwdgen [len]` | Generate random passwords (default: 32 chars) |
 
-## Requirements
-
-- macOS Ventura 13.0+
-- Apple Silicon (M1/M2/M3) or Intel
-- Xcode Command Line Tools: `xcode-select --install`
-
-## Customization
-
-### Change Neovim Theme
-Edit `profile/nvim/lua/plugins/editor.lua`
-
-### Add ZSH Aliases
-Edit `profile/zsh.d/alias.zsh`
-
-### Modify Tmux Theme
-Edit `profile/tmux.local`
-
-### Change Kitty Theme
-Edit `config/kitty/kitty.conf`:
-```conf
-include themes/dracula.conf
-```
+---
 
 ## Troubleshooting
 
+<details>
+<summary><strong>Reload configurations</strong></summary>
+
 ```bash
-# Reload ZSH
+# ZSH
 source ~/.zshrc
 
-# Sync Neovim plugins
+# Neovim plugins
 nvim +"Lazy sync" +qa
 
-# Reload Tmux config
+# Tmux
 tmux source-file ~/.tmux.conf
 
-# Reload Kitty config
-Cmd+Shift+,
+# Kitty (or press Cmd+Shift+,)
+kill -SIGUSR1 $(pgrep kitty)
 ```
+</details>
 
-## License
+<details>
+<summary><strong>Reset Neovim</strong></summary>
 
-Personal configuration. Use freely.
+```bash
+rm -rf ~/.local/share/nvim
+rm -rf ~/.local/state/nvim
+rm -rf ~/.cache/nvim
+nvim  # Fresh start
+```
+</details>
+
+<details>
+<summary><strong>Profile ZSH startup time</strong></summary>
+
+```bash
+time zsh -i -c exit
+```
+</details>
+
+---
+
+## Acknowledgments
+
+Inspired by and built upon the work of:
+
+- [gpakosz/.tmux](https://github.com/gpakosz/.tmux) - Tmux configuration
+- [mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles) - macOS dotfiles inspiration
+- [holman/dotfiles](https://github.com/holman/dotfiles) - Organization patterns
+- [folke](https://github.com/folke) - Neovim plugin ecosystem
+
+---
+
+<div align="center">
+
+**[Back to top](#dotfiles)**
+
+Made with care by [Javier Coscolla](https://github.com/jcc-tck)
+
+</div>
