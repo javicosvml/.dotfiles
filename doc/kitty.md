@@ -1,6 +1,17 @@
+<div align="center">
+
 # Kitty Configuration
 
-GPU-accelerated terminal emulator with modular configuration.
+GPU-accelerated terminal emulator with modular configuration
+
+[Structure](#structure) •
+[Keybindings](#keybindings) •
+[Theme](#theme) •
+[Customization](#customization)
+
+</div>
+
+---
 
 ## Structure
 
@@ -9,8 +20,8 @@ config/kitty/
 ├── kitty.conf           # Main config → ~/.config/kitty/
 ├── conf.d/
 │   ├── fonts.conf       # Font settings
-│   ├── macos.conf       # macOS-specific
-│   └── keybindings.conf # Shortcuts
+│   ├── macos.conf       # macOS-specific options
+│   └── keybindings.conf # Keyboard shortcuts
 └── themes/
     ├── tokyonight.conf
     ├── dracula.conf
@@ -18,78 +29,128 @@ config/kitty/
     └── material-dark.conf
 ```
 
+---
+
 ## Keybindings
 
-Modifier: **`Cmd`** (⌘)
+**Modifier:** `Cmd` (⌘)
 
 ### Clipboard
+
 | Key | Action |
-|-----|--------|
-| `Cmd+C` | Copy |
-| `Cmd+V` | Paste |
+|:----|:-------|
+| `⌘ C` | Copy |
+| `⌘ V` | Paste |
 
 ### Tabs
+
 | Key | Action |
-|-----|--------|
-| `Cmd+T` | New tab |
-| `Cmd+Shift+W` | Close tab |
-| `Cmd+Shift+←/→` | Previous/next tab |
-| `Cmd+1-9` | Go to tab |
+|:----|:-------|
+| `⌘ T` | New tab |
+| `⌘ ⇧ W` | Close tab |
+| `⌘ ⇧ ←/→` | Previous/Next tab |
+| `⌘ 1-9` | Go to tab N |
 
 ### Windows
-| Key | Action |
-|-----|--------|
-| `Cmd+N` | New OS window |
-| `Cmd+Enter` | New split |
-| `Cmd+W` | Close window |
-| `Cmd+]/[` | Next/previous window |
 
-### Font
 | Key | Action |
-|-----|--------|
-| `Cmd+=` | Increase size |
-| `Cmd+-` | Decrease size |
-| `Cmd+0` | Reset size |
+|:----|:-------|
+| `⌘ N` | New OS window |
+| `⌘ ↵` | New split window |
+| `⌘ W` | Close window |
+| `⌘ ]` / `⌘ [` | Next/Previous window |
 
-### Other
+### Font Size
+
 | Key | Action |
-|-----|--------|
-| `Cmd+K` | Clear scrollback |
-| `Cmd+,` | Edit config |
-| `Cmd+Shift+,` | Reload config |
-| `Cmd+F` | Search scrollback (fzf) |
+|:----|:-------|
+| `⌘ =` | Increase font size |
+| `⌘ -` | Decrease font size |
+| `⌘ 0` | Reset font size |
+
+### Miscellaneous
+
+| Key | Action |
+|:----|:-------|
+| `⌘ K` | Clear scrollback |
+| `⌘ ,` | Edit configuration |
+| `⌘ ⇧ ,` | Reload configuration |
+| `⌘ F` | Search scrollback (fzf) |
+
+---
 
 ## Theme
 
-Current: `tokyonight.conf`
+**Current:** `tokyonight.conf`
 
-Change in `kitty.conf`:
+### Available Themes
+
+| Theme | File |
+|:------|:-----|
+| Tokyo Night | `themes/tokyonight.conf` |
+| Dracula | `themes/dracula.conf` |
+| Nord | `themes/nord.conf` |
+| Material Dark | `themes/material-dark.conf` |
+
+### Change Theme
+
+Edit `kitty.conf`:
+
 ```conf
 include themes/dracula.conf
 ```
 
+---
+
 ## Font
 
-Current: JetBrains Mono Nerd Font
+**Current:** JetBrains Mono Nerd Font
 
-Edit `conf.d/fonts.conf` to change.
+Edit `conf.d/fonts.conf` to change font settings.
+
+---
 
 ## Customization
 
-```bash
-# List available fonts
-kitty +list-fonts
+### List Available Fonts
 
-# Test config
+```bash
+kitty +list-fonts
+```
+
+### Test Configuration
+
+```bash
 kitty --debug-config
 ```
 
+---
+
 ## Troubleshooting
 
-```bash
-# Reload config
-Cmd+Shift+,
+<details>
+<summary><strong>Reload configuration</strong></summary>
 
-# Check TERM
-echo $TERM  # Should be: xterm-kitty
+Press `⌘ ⇧ ,` or:
+
+```bash
+kill -SIGUSR1 $(pgrep kitty)
 ```
+</details>
+
+<details>
+<summary><strong>Check TERM variable</strong></summary>
+
+```bash
+echo $TERM
+# Should output: xterm-kitty
+```
+</details>
+
+---
+
+<div align="center">
+
+[Back to README](../README.md)
+
+</div>
