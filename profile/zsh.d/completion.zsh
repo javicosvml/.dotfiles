@@ -1,16 +1,7 @@
 # Autocompletion Configuration
+# Note: compinit is handled by zinit turbo mode in plugins.zsh (zicompinit)
 
-# Initialize completion system
-autoload -Uz compinit
-
-# On macOS, check compdump once a day for performance
-if [[ -n ${HOME}/.zcompdump(#qN.mh+24) ]]; then
-  compinit
-else
-  compinit -C
-fi
-
-# Bash compatibility
+# Bash compatibility (deferred)
 autoload -Uz bashcompinit && bashcompinit
 
 # Zinit completions

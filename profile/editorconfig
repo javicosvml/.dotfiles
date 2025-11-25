@@ -1,0 +1,84 @@
+# EditorConfig
+# https://editorconfig.org
+# Symlinked to ~/.editorconfig
+
+root = true
+
+# Default settings for all files
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+max_line_length = 120
+
+# Markdown - preserve trailing whitespace for line breaks
+[*.md]
+trim_trailing_whitespace = false
+
+# Python - PEP 8
+[*.py]
+indent_size = 4
+max_line_length = 88
+
+# Go - tabs, not spaces
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# Rust
+[*.rs]
+indent_size = 4
+
+# Java/Kotlin
+[*.{java,kt,kts}]
+indent_size = 4
+
+# Makefiles - must use tabs
+[Makefile]
+indent_style = tab
+
+[*.mk]
+indent_style = tab
+
+# Shell scripts
+[*.{sh,bash,zsh}]
+indent_size = 2
+
+# YAML
+[*.{yml,yaml}]
+indent_size = 2
+
+# JSON
+[*.json]
+indent_size = 2
+
+# JavaScript/TypeScript
+[*.{js,jsx,ts,tsx,mjs,cjs}]
+indent_size = 2
+
+# HTML/CSS
+[*.{html,htm,css,scss,sass,less}]
+indent_size = 2
+
+# XML
+[*.{xml,xsl,xslt,svg}]
+indent_size = 2
+
+# Ruby
+[*.rb]
+indent_size = 2
+
+# Terraform
+[*.{tf,tfvars}]
+indent_size = 2
+
+# Docker
+[Dockerfile*]
+indent_size = 4
+
+# Git
+[.git*]
+indent_size = 2

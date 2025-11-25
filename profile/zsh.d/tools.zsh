@@ -3,13 +3,13 @@
 
 # ASDF Version Manager (Homebrew installation)
 # Documentation: https://asdf-vm.com/
-# IMPORTANT: ASDF is sourced AFTER Homebrew to ensure ASDF-managed tools take priority in PATH
-if [[ -f "$(brew --prefix asdf)/libexec/asdf.sh" ]]; then
-  source "$(brew --prefix asdf)/libexec/asdf.sh"
+# Uses $HOMEBREW_PREFIX cached in env.zsh to avoid slow brew --prefix calls
+if [[ -f "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh" ]]; then
+  source "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh"
   # Prepend ASDF shims to PATH to prioritize ASDF-managed tools over Homebrew
   export PATH="$HOME/.asdf/shims:$PATH"
   # Append completions to fpath
-  fpath=($(brew --prefix asdf)/share/zsh/site-functions $fpath)
+  fpath=($HOMEBREW_PREFIX/opt/asdf/share/zsh/site-functions $fpath)
 elif [[ -f "$HOME/.asdf/asdf.sh" ]]; then
   # Fallback to manual installation
   source "$HOME/.asdf/asdf.sh"
@@ -45,10 +45,11 @@ fi
 
 # fzf - Fuzzy finder (if installed via Homebrew)
 # Documentation: https://github.com/junegunn/fzf
-if [[ -f "$(brew --prefix)/opt/fzf/shell/key-bindings.zsh" ]]; then
-  source "$(brew --prefix)/opt/fzf/shell/key-bindings.zsh"
-  source "$(brew --prefix)/opt/fzf/shell/completion.zsh"
-  
+# Uses $HOMEBREW_PREFIX cached in env.zsh
+if [[ -f "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh" ]]; then
+  source "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh"
+  source "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh"
+
   # fzf configuration
   export FZF_DEFAULT_OPTS='
     --height 40%
@@ -60,7 +61,7 @@ if [[ -f "$(brew --prefix)/opt/fzf/shell/key-bindings.zsh" ]]; then
     --color=info:#afaf87,prompt:#d7005f,pointer:#af5fff
     --color=marker:#87ff00,spinner:#af5fff,header:#87afaf
   '
-  
+
   # Use fd instead of find if available
   if command -v fd &>/dev/null; then
     export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
@@ -73,4 +74,12 @@ fi
 if command -v bat &>/dev/null; then
   export BAT_THEME="TwoDark"
   export BAT_STYLE="numbers,changes,header"
+fi
+
+# Claude Code - AWS Bedrock Configuration
+# Uses AWS Bedrock instead of Anthropic API
+if command -v claude &>/dev/null; then
+  export CLAUDE_CODE_USE_BEDROCK=1
+  export AWS_REGION=us-east-1
+  export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:649767612582:inference-profile/global.anthropic.claude-opus-4-5-20251101-v1:0'
 fi

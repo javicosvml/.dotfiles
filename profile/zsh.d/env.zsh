@@ -2,11 +2,13 @@
 # Loaded early in shell initialization
 
 # Homebrew paths (macOS specific)
+# Cache brew prefix to avoid repeated slow calls
 if [[ "$(uname -m)" == "arm64" ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+  export HOMEBREW_PREFIX="/opt/homebrew"
 else
-  eval "$(/usr/local/bin/brew shellenv)"
+  export HOMEBREW_PREFIX="/usr/local"
 fi
+eval "$($HOMEBREW_PREFIX/bin/brew shellenv)"
 
 # Add directories to PATH (ordered by priority)
 export PATH="$HOME/bin:$HOME/.local/bin:$PATH"

@@ -1,0 +1,217 @@
+*keymaps.txt*    Neovim Keymaps Reference
+
+================================================================================
+CONTENTS                                                      *keymaps-contents*
+
+    1. Introduction ............................ |keymaps-introduction|
+    2. General Keymaps ......................... |keymaps-general|
+    3. Navigation .............................. |keymaps-navigation|
+    4. File Explorer (Neo-tree) ................ |keymaps-neotree|
+    5. Fuzzy Finder (Telescope) ................ |keymaps-telescope|
+    6. LSP ..................................... |keymaps-lsp|
+    7. Autocompletion (nvim-cmp) ............... |keymaps-completion|
+    8. Git (Gitsigns) .......................... |keymaps-git|
+    9. Comments ................................ |keymaps-comments|
+    10. Surround ............................... |keymaps-surround|
+    11. Treesitter Text Objects ................ |keymaps-textobjects|
+
+================================================================================
+1. INTRODUCTION                                           *keymaps-introduction*
+
+Leader key: <Space>
+
+Press <Space> and wait to see available keybindings via which-key.
+
+================================================================================
+2. GENERAL KEYMAPS                                            *keymaps-general*
+
+Escape & Search ~
+    jk / kj         Exit insert mode (alternative to <Esc>)
+    <Esc>           Clear search highlighting (normal mode)
+
+Save & Quit ~
+    <leader>w       Save file
+    <leader>W       Save all files
+    <leader>q       Quit
+    <leader>Q       Quit all (force)
+
+Splits ~
+    <leader>sv      Split vertical
+    <leader>sh      Split horizontal
+    <leader>se      Equal split sizes
+    <leader>sx      Close split
+
+Buffer Management ~
+    <S-l>           Next buffer
+    <S-h>           Previous buffer
+    <leader>bd      Delete buffer
+
+Move Lines ~
+    <A-j>           Move line down (normal/visual)
+    <A-k>           Move line up (normal/visual)
+
+Visual Mode ~
+    <               Indent left (stay in visual)
+    >               Indent right (stay in visual)
+    p               Paste without yanking selection
+
+Scrolling ~
+    <C-d>           Scroll down (centered)
+    <C-u>           Scroll up (centered)
+    n               Next search result (centered)
+    N               Previous search result (centered)
+
+Diagnostics ~
+    [d              Previous diagnostic
+    ]d              Next diagnostic
+    <leader>e       Show diagnostic float
+
+================================================================================
+3. NAVIGATION                                              *keymaps-navigation*
+
+Window Navigation ~
+    <C-h>           Move to left window
+    <C-j>           Move to window below
+    <C-k>           Move to window above
+    <C-l>           Move to right window
+
+Window Resize ~
+    <C-Up>          Decrease height
+    <C-Down>        Increase height
+    <C-Left>        Decrease width
+    <C-Right>       Increase width
+
+================================================================================
+4. FILE EXPLORER (NEO-TREE)                                  *keymaps-neotree*
+
+    <leader>n       Toggle file explorer
+    <C-n>           Toggle file explorer
+
+Inside Neo-tree ~
+    <CR>            Open file/expand folder
+    a               Add file/folder
+    d               Delete
+    r               Rename
+    c               Copy
+    m               Move
+    y               Copy name
+    Y               Copy path
+    ?               Show help
+
+================================================================================
+5. FUZZY FINDER (TELESCOPE)                                *keymaps-telescope*
+
+    <C-p>           Find files
+    <leader>ff      Find files
+    <leader>fg      Live grep (search text)
+    <leader>fb      List buffers
+    <leader>fh      Help tags
+    <leader>fr      Recent files
+    <leader>fc      Commands
+    <leader>fd      Diagnostics
+    <leader>/       Search in current buffer
+
+Inside Telescope ~
+    <C-n>/<Down>    Next item
+    <C-p>/<Up>      Previous item
+    <CR>            Open selection
+    <C-x>           Open in horizontal split
+    <C-v>           Open in vertical split
+    <C-t>           Open in new tab
+    <Esc>           Close telescope
+
+================================================================================
+6. LSP                                                          *keymaps-lsp*
+
+Navigation ~
+    gd              Go to definition
+    gD              Go to declaration
+    gr              Go to references
+    gi              Go to implementation
+    K               Hover documentation
+
+Actions ~
+    <leader>ca      Code action
+    <leader>rn      Rename symbol
+    <leader>D       Type definition
+    <leader>f       Format buffer
+
+Symbols ~
+    <leader>fs      Document symbols
+    <leader>ws      Workspace symbols
+
+================================================================================
+7. AUTOCOMPLETION (NVIM-CMP)                               *keymaps-completion*
+
+Insert Mode ~
+    <Tab>           Next completion item / Expand snippet / Jump forward
+    <S-Tab>         Previous completion item / Jump backward
+    <CR>            Confirm selection
+    <C-Space>       Trigger completion
+    <C-e>           Abort completion
+    <C-b>           Scroll docs up
+    <C-f>           Scroll docs down
+
+Command Mode ~
+    <Tab>           Next completion
+    <S-Tab>         Previous completion
+
+================================================================================
+8. GIT (GITSIGNS)                                               *keymaps-git*
+
+Hunk Navigation ~
+    ]h              Next hunk
+    [h              Previous hunk
+
+Hunk Actions ~
+    <leader>hs      Stage hunk
+    <leader>hr      Reset hunk
+    <leader>hp      Preview hunk
+    <leader>hb      Blame line
+
+================================================================================
+9. COMMENTS                                                  *keymaps-comments*
+
+    gcc             Toggle comment (line)
+    gc              Toggle comment (motion/visual)
+    gcip            Comment inner paragraph
+    gc3j            Comment 3 lines down
+
+================================================================================
+10. SURROUND                                                 *keymaps-surround*
+
+Add Surround ~
+    ys{motion}{char}    Add surround
+    ysiw"               Surround word with "
+    yss)                Surround line with ()
+
+Change Surround ~
+    cs{old}{new}        Change surround
+    cs'"                Change ' to "
+    cs)]                Change ) to ]
+
+Delete Surround ~
+    ds{char}            Delete surround
+    ds"                 Delete surrounding "
+    ds)                 Delete surrounding ()
+
+Visual Mode ~
+    S{char}             Surround selection
+
+================================================================================
+11. TREESITTER TEXT OBJECTS                               *keymaps-textobjects*
+
+Selection ~
+    af              Select outer function
+    if              Select inner function
+    ac              Select outer class
+    ic              Select inner class
+
+Movement ~
+    ]m              Next function start
+    ]M              Next function end
+    [m              Previous function start
+    [M              Previous function end
+
+================================================================================
+vim:tw=78:ts=8:ft=help:norl:

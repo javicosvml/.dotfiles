@@ -1,6 +1,6 @@
 .ONESHELL:
 .SHELL := /bin/sh
-.PHONY: help all zsh neovim tmux
+.PHONY: help all zsh neovim tmux git
 .DEFAULT_GOAL := help
 CURRENT_FOLDER = $(shell basename "$$(pwd)")
 BOLD = $(shell tput bold)
@@ -21,7 +21,7 @@ help: ## Show this help message
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-all: zsh neovim tmux ## Install all profiles (ZSH, Neovim, Tmux)
+all: zsh neovim tmux git ## Install all profiles (ZSH, Neovim, Tmux, Git)
 	@echo "✓ Local environment successfully configured for macOS"
 
 tmux: ## Install Tmux configuration
@@ -38,9 +38,18 @@ zsh: ## Install ZSH configuration
 	@ln -s -f ${PROFILE}/zsh.d ${HOME}/.zsh.d
 	@echo "ZSH configuration installed!"
 
-neovim: ## Install Neovim/Vim configuration
-	@echo "Installing Neovim/Vim configuration..."
-	@mkdir -p ${HOME}/.config/nvim
-	@ln -s -f ${PROFILE}/vimrc ${HOME}/.config/nvim/init.vim
-	@ln -s -f ${PROFILE}/vimrc ${HOME}/.vimrc
-	@echo "Neovim/Vim configuration installed!"
+neovim: ## Install Neovim configuration (Lua-based)
+	@echo "Installing Neovim configuration..."
+	@mkdir -p ${HOME}/.config
+	@rm -rf ${HOME}/.config/nvim
+	@ln -s -f ${PROFILE}/nvim ${HOME}/.config/nvim
+	@echo "Neovim configuration installed!"
+	@echo "  Run 'nvim' to install plugins automatically"
+
+git: ## Install Git configuration (gitconfig, gitignore_global, editorconfig)
+	@echo "Installing Git configuration..."
+	@ln -s -f ${PROFILE}/gitconfig ${HOME}/.gitconfig
+	@ln -s -f ${PROFILE}/gitignore_global ${HOME}/.gitignore_global
+	@ln -s -f ${PROFILE}/editorconfig ${HOME}/.editorconfig
+	@echo "Git configuration installed!"
+	@echo "  Note: Set your name/email in ~/.gitconfig.local"

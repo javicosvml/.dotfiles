@@ -1,10 +1,61 @@
+# Pre-commit hooks configuration
+# https://pre-commit.com/
+# Install: pre-commit install
+# Update:  pre-commit autoupdate
+# Run all: pre-commit run --all-files
+
 repos:
-- repo: https://github.com/smian/pre-commit-makefile.git
-  rev: 261f8fb4b31dfdc05d1a1d7fbde1f1462ecde66d
-  hooks:
-  - id: makefile-doc
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.5.0
-  hooks:
-  - id: check-merge-conflict
-  - id: end-of-file-fixer
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  # Shell script linting (only executable scripts, not sourced files)
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+        exclude: ^profile/zsh\.d/
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args: [-d, '{extends: relaxed, rules: {line-length: disable}}']
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.46.0
+    hooks:
+      - id: markdownlint
+        args: [--disable, MD013, MD022, MD031, MD032, MD033, MD040, MD041, MD060, --]
+
+  # Typos checker
+  - repo: https://github.com/crate-ci/typos
+    rev: v1
+    hooks:
+      - id: typos
+        args: [--force-exclude]
+
+  # Security - detect secrets
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.29.1
+    hooks:
+      - id: gitleaks

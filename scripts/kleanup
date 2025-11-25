@@ -1,30 +1,53 @@
 #!/bin/bash
+# Kubernetes cleanup script
+# Removes old ReplicaSets, completed Jobs, and evicted Pods
 
-KUBERNETES_CLEAN_DAYS=7  # Define el número de días para limpiar
+KUBERNETES_CLEAN_DAYS=7
 
-# Función para eliminar recursos
+# Function to delete resources
 delete_resources() {
-  local resources=$1
-  while IFS='|' read -r namespace resource; do
-    kubectl -n "$namespace" delete "$resource" --wait=false
-    sleep 0.25
-  done <<< "$resources"
+    local resources=$1
+    local count=0
+    while IFS='|' read -r namespace resource; do
+        if [ -n "$namespace" ] && [ -n "$resource" ]; then
+            kubectl -n "$namespace" delete "$resource" --wait=false 2>/dev/null
+            ((count++))
+            sleep 0.25
+        fi
+    done <<< "$resources"
+    echo "  Deleted $count resources"
 }
 
-# Elimina ReplicaSets vacíos más antiguos que $KUBERNETES_CLEAN_DAYS días
-emptyReplicaSets=$(kubectl get rs --all-namespaces --no-headers -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,AGE:.metadata.creationTimestamp' | \
-  awk -v max_days="$KUBERNETES_CLEAN_DAYS" '$3 ~ /d|h/ && int($3) > max_days {print $1 "|" $2}')
+echo "Kubernetes Cleanup"
+echo "=================="
+echo ""
 
+# Check if kubectl is available
+if ! command -v kubectl &>/dev/null; then
+    echo "Error: kubectl not found"
+    exit 1
+fi
+
+# Check cluster connection
+if ! kubectl cluster-info &>/dev/null; then
+    echo "Error: Cannot connect to Kubernetes cluster"
+    exit 1
+fi
+
+echo "Cleaning ReplicaSets older than $KUBERNETES_CLEAN_DAYS days..."
+emptyReplicaSets=$(kubectl get rs --all-namespaces --no-headers -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,AGE:.metadata.creationTimestamp' 2>/dev/null | \
+    awk -v max_days="$KUBERNETES_CLEAN_DAYS" '$3 ~ /d|h/ && int($3) > max_days {print $1 "|rs/" $2}')
 delete_resources "$emptyReplicaSets"
 
-# Elimina trabajos completados más antiguos que 1 hora
-finishedJobs=$(kubectl get jobs --all-namespaces --no-headers -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,COMPLETIONS:.spec.completions,AGE:.metadata.creationTimestamp' | \
-  awk '$3 == 1 && $4 ~ /h/ {print $1 "|" $2}')
-
+echo "Cleaning completed Jobs older than 1 hour..."
+finishedJobs=$(kubectl get jobs --all-namespaces --no-headers -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,COMPLETIONS:.spec.completions,AGE:.metadata.creationTimestamp' 2>/dev/null | \
+    awk '$3 == 1 && $4 ~ /h/ {print $1 "|job/" $2}')
 delete_resources "$finishedJobs"
 
-# Elimina pods evictados no reciclados más antiguos que 1 hora
-evictedPods=$(kubectl get pods --all-namespaces --no-headers -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,STATUS:.status.phase,AGE:.metadata.creationTimestamp' | \
-  awk '$3 == "Evicted" && $4 ~ /h/ {print $1 "|" $2}')
-
+echo "Cleaning evicted Pods older than 1 hour..."
+evictedPods=$(kubectl get pods --all-namespaces --no-headers -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,STATUS:.status.phase,AGE:.metadata.creationTimestamp' 2>/dev/null | \
+    awk '$3 == "Evicted" && $4 ~ /h/ {print $1 "|pod/" $2}')
 delete_resources "$evictedPods"
+
+echo ""
+echo "Kubernetes cleanup complete!"

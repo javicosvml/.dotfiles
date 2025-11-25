@@ -16,22 +16,35 @@ if command -v bat &>/dev/null; then
   alias batp='bat --style=plain'  # Plain without line numbers
 fi
 
-# lsd - Modern ls with icons
+# Modern ls alternatives with fallback to standard ls
 if command -v lsd &>/dev/null; then
+  # lsd - Modern ls with icons
   alias ls='lsd'
   alias ll='lsd -lah'
   alias la='lsd -A'
   alias lt='lsd --tree'
   alias l='lsd -lh'
-fi
-
-# exa - Another modern ls alternative (if installed instead of lsd)
-if command -v exa &>/dev/null && ! command -v lsd &>/dev/null; then
+elif command -v eza &>/dev/null; then
+  # eza - Modern replacement for exa (exa is unmaintained)
+  alias ls='eza --icons'
+  alias ll='eza -lah --icons'
+  alias la='eza -a --icons'
+  alias lt='eza --tree --icons'
+  alias l='eza -lh --icons'
+elif command -v exa &>/dev/null; then
+  # exa - Another modern ls alternative (deprecated, use eza)
   alias ls='exa --icons'
   alias ll='exa -lah --icons'
   alias la='exa -a --icons'
   alias lt='exa --tree --icons'
   alias l='exa -lh --icons'
+else
+  # Fallback to standard ls with colors
+  alias ls='ls --color=auto'
+  alias ll='ls -lah --color=auto'
+  alias la='ls -A --color=auto'
+  alias lt='ls -lR --color=auto'  # Recursive, no tree without external tool
+  alias l='ls -lh --color=auto'
 fi
 
 # Modern Unix tools replacements
