@@ -1,32 +1,39 @@
 #!/bin/bash
+set -euo pipefail
 
 # macOS-compatible Docker cleanup script
+
+# Check if Docker is running
+if ! docker info &>/dev/null; then
+    echo "Error: Docker is not running"
+    exit 1
+fi
 
 echo "Cleaning up Docker resources..."
 
 # Remove exited containers
-EXITED_CONTAINERS=$(docker ps -aq -f status=exited)
+EXITED_CONTAINERS=$(docker ps -aq -f status=exited || true)
 if [ -n "$EXITED_CONTAINERS" ]; then
     echo "Removing exited containers..."
-    docker rm -v $EXITED_CONTAINERS
+    echo "$EXITED_CONTAINERS" | xargs docker rm -v
 else
     echo "No exited containers to remove."
 fi
 
 # Remove dangling images
-DANGLING_IMAGES=$(docker images -qf dangling=true)
+DANGLING_IMAGES=$(docker images -qf dangling=true || true)
 if [ -n "$DANGLING_IMAGES" ]; then
     echo "Removing dangling images..."
-    docker rmi $DANGLING_IMAGES
+    echo "$DANGLING_IMAGES" | xargs docker rmi
 else
     echo "No dangling images to remove."
 fi
 
 # Remove dangling volumes
-DANGLING_VOLUMES=$(docker volume ls -qf dangling=true)
+DANGLING_VOLUMES=$(docker volume ls -qf dangling=true || true)
 if [ -n "$DANGLING_VOLUMES" ]; then
     echo "Removing dangling volumes..."
-    docker volume rm $DANGLING_VOLUMES
+    echo "$DANGLING_VOLUMES" | xargs docker volume rm
 else
     echo "No dangling volumes to remove."
 fi
