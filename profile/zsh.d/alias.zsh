@@ -24,20 +24,6 @@ if command -v lsd &>/dev/null; then
   alias la='lsd -A'
   alias lt='lsd --tree'
   alias l='lsd -lh'
-elif command -v eza &>/dev/null; then
-  # eza - Modern replacement for exa (exa is unmaintained)
-  alias ls='eza --icons'
-  alias ll='eza -lah --icons'
-  alias la='eza -a --icons'
-  alias lt='eza --tree --icons'
-  alias l='eza -lh --icons'
-elif command -v exa &>/dev/null; then
-  # exa - Another modern ls alternative (deprecated, use eza)
-  alias ls='exa --icons'
-  alias ll='exa -lah --icons'
-  alias la='exa -a --icons'
-  alias lt='exa --tree --icons'
-  alias l='exa -lh --icons'
 else
   # Fallback to standard ls with colors
   alias ls='ls --color=auto'
