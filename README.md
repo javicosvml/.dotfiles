@@ -1,8 +1,6 @@
-
+<div align="center">
 
 ![Death](img/whatrudoing.png)
-
-<div align="center">
 
 # ~/.dotfiles
 
