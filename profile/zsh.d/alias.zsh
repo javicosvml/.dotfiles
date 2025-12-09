@@ -17,21 +17,22 @@ if command -v bat &>/dev/null; then
 fi
 
 # Modern ls alternatives with fallback to standard ls
-if command -v lsd &>/dev/null; then
-  # lsd - Modern ls with icons
-  alias ls='lsd'
-  alias ll='lsd -lah'
-  alias la='lsd -A'
-  alias lt='lsd --tree'
-  alias l='lsd -lh'
-else
+# lsd disabled due to performance/rendering issues
+# if command -v lsd &>/dev/null; then
+#   # lsd - Modern ls with icons
+#   alias ls='lsd'
+#   alias ll='lsd -lah'
+#   alias la='lsd -A'
+#   alias lt='lsd --tree'
+#   alias l='lsd -lh'
+# else
   # Fallback to standard ls with colors
-  alias ls='ls --color=auto'
-  alias ll='ls -lah --color=auto'
-  alias la='ls -A --color=auto'
-  alias lt='ls -lR --color=auto'  # Recursive, no tree without external tool
-  alias l='ls -lh --color=auto'
-fi
+  alias ls='/bin/ls -G'
+  alias ll='/bin/ls -lGah'
+  alias la='/bin/ls -GA'
+  alias lt='/bin/ls -lGR'
+  alias l='/bin/ls -lGh'
+# fi
 
 # Modern Unix tools replacements
 if command -v fd &>/dev/null; then
