@@ -55,7 +55,13 @@
       "Bash(gh release create v1.0.0 --title \"v1.0.0 - Initial Release\" --notes \"$(cat <<''EOF''\n## 🎉 Initial Release\n\nMy personal macOS development environment - meticulously crafted configuration for a productive and beautiful terminal experience.\n\n### ✨ Highlights\n\n- **ZSH** with Zinit plugin manager and Powerlevel10k instant prompt\n- **Neovim** with lazy.nvim, LSP, Treesitter, and Telescope\n- **Kitty** GPU-accelerated terminal with multiple themes\n- **Tmux** based on gpakosz/.tmux with Dracula theme\n- **ASDF** multi-language version manager\n- **Modern CLI tools**: bat, lsd, fd, ripgrep, fzf\n\n### 📦 What''s Included\n\n| Component | Tool |\n|-----------|------|\n| Shell | ZSH + Zinit + Powerlevel10k |\n| Editor | Neovim + lazy.nvim + LSP |\n| Terminal | Kitty (GPU-accelerated) |\n| Multiplexer | Tmux + gpakosz/.tmux |\n| Version Manager | ASDF |\n| Package Manager | Homebrew |\n\n### 🚀 Quick Start\n\n```bash\ngit clone https://github.com/javicosvml/.dotfiles.git ~/.dotfiles\ncd ~/.dotfiles\nmake all\n```\n\n### 📚 Documentation\n\n- [ZSH Configuration](doc/zsh.md)\n- [Neovim Configuration](doc/nvim.md)\n- [Tmux Configuration](doc/tmux.md)\n- [Kitty Configuration](doc/kitty.md)\n\n---\n\nSee [CHANGELOG.md](CHANGELOG.md) for full details.\nEOF\n)\")",
       "Bash(git commit:*)",
       "WebFetch(domain:www.gnu.org)",
-      "WebFetch(domain:tech.davis-hansson.com)"
+      "WebFetch(domain:tech.davis-hansson.com)",
+      "Bash(command -v:*)",
+      "Bash(timeout 5 /bin/ls:*)",
+      "Bash(timeout 5 lsd:*)",
+      "Bash(while read link)",
+      "Bash(do file \"$link\")",
+      "Bash(sort:*)"
     ],
     "deny": [],
     "ask": []
