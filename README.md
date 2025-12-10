@@ -38,7 +38,7 @@
 
 ### Terminal & Shell
 - **ZSH** with [Zinit](https://github.com/zdharma-continuum/zinit) plugin manager
-- **[Powerlevel10k](https://github.com/romkatv/powerlevel10k)** instant prompt
+- **Parametrizable prompt** with [gitstatus](https://github.com/romkatv/gitstatus) (~47ms startup)
 - **[Kitty](https://sw.kovidgoyal.net/kitty/)** GPU-accelerated terminal
 - **[Tmux](https://github.com/tmux/tmux)** with [gpakosz/.tmux](https://github.com/gpakosz/.tmux) base
 
@@ -59,11 +59,11 @@
 
 | Feature | Description |
 |---------|-------------|
-| **Modular Design** | Organized configs with `zsh.d/` and `conf.d/` includes |
+| **Modular Design** | Organized configs with `zsh.d/` includes and flat structure |
 | **One-Command Install** | Get up and running with a single `make` command |
 | **Modern CLI Tools** | `bat`, `lsd`, `fd`, `ripgrep`, `fzf` aliases built-in |
 | **Auto-Tmux** | Automatically attaches to tmux session on login |
-| **Dracula Theme** | Consistent theming across all tools |
+| **Optimized Performance** | ~47ms ZSH startup with intelligent caching |
 
 ---
 
@@ -105,7 +105,7 @@ make asdf && source ~/.zshrc
 # 3. Install shell/editor configurations
 make profile
 
-# 4. Install development tools (Python, Node.js, Go, etc.)
+# 4. Install development tools (Node.js, Go, Terraform, etc.)
 make tools
 
 # 5. (Optional) Install Kitty terminal
@@ -121,7 +121,7 @@ make kitty
 | Component | Tool | Description |
 |:---------:|:----:|:------------|
 | <img src="https://www.vectorlogo.zone/logos/gnu_bash/gnu_bash-icon.svg" width="20"> | **[ZSH](https://www.zsh.org/)** | Shell with [Zinit](https://github.com/zdharma-continuum/zinit) plugins |
-| <img src="https://raw.githubusercontent.com/romkatv/powerlevel10k-media/master/prompt-styles-high-contrast.png" width="20"> | **[Powerlevel10k](https://github.com/romkatv/powerlevel10k)** | Lightning-fast prompt |
+| <img src="https://raw.githubusercontent.com/romkatv/powerlevel10k-media/master/prompt-styles-high-contrast.png" width="20"> | **[gitstatus](https://github.com/romkatv/gitstatus)** | Ultra-fast parametrizable prompt (~47ms) |
 | <img src="https://sw.kovidgoyal.net/kitty/_static/kitty.svg" width="20"> | **[Kitty](https://sw.kovidgoyal.net/kitty/)** | GPU-accelerated terminal |
 | <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Tmux_logo.svg" width="20"> | **[Tmux](https://github.com/tmux/tmux)** | Terminal multiplexer |
 | <img src="https://www.vectorlogo.zone/logos/neovimio/neovimio-icon.svg" width="20"> | **[Neovim](https://neovim.io/)** | Modern Vim with LSP |
@@ -132,49 +132,28 @@ make kitty
 
 ```
 ~/.dotfiles/
-├── Makefile                    # Main installer
-├── config/
-│   └── kitty/                  # Kitty terminal
-│       ├── kitty.conf          # Main config
-│       ├── conf.d/             # Modular: fonts, keys, macos
-│       └── themes/             # Color themes
-├── profile/
-│   ├── zshrc                   # ZSH main config
-│   ├── zsh.d/                  # Modular ZSH configs
-│   │   ├── env.zsh             # Environment & PATH
-│   │   ├── plugins.zsh         # Zinit plugins
-│   │   ├── alias.zsh           # Shell aliases
-│   │   └── ...                 # More modules
-│   ├── nvim/                   # Neovim (Lua-based)
-│   │   ├── init.lua            # Entry point
-│   │   └── lua/
-│   │       ├── config/         # Options, keymaps
-│   │       └── plugins/        # LSP, treesitter, etc.
-│   ├── tmux.conf               # Tmux base config
-│   ├── tmux.local              # Tmux customizations
-│   ├── gitconfig               # Git configuration
-│   └── editorconfig            # Editor settings
-├── tools/
-│   └── Makefile                # ASDF tool installer
-├── scripts/                    # Utility scripts
-│   ├── dclean                  # Docker cleanup
-│   ├── kleanup                 # Kubernetes cleanup
-│   └── passwdgen               # Password generator
-└── doc/                        # Documentation
+├── Makefile                    # Unified installer (main + tools + profile)
+├── Dockerfile                  # Docker test environment
+├── init.sh                     # Complete test suite
+├── zshrc                       # ZSH entry point → ~/.zshrc
+├── zsh.d/                      # Modular ZSH → ~/.zsh.d/
+│   ├── env.zsh                 # Environment & PATH
+│   ├── plugins.zsh             # Zinit plugins
+│   ├── alias.zsh               # Shell aliases
+│   ├── tools.zsh               # Tool integrations (ASDF, etc.)
+│   └── ...                     # More modules
+├── nvim/                       # Neovim → ~/.config/nvim
+│   ├── init.lua                # Entry point
+│   ├── lazy-lock.json          # Plugin lockfile
+│   └── lua/
+│       ├── config/             # Options, keymaps, autocmds
+│       └── plugins/            # LSP, treesitter, editor, completion
+├── kitty.conf                  # Kitty terminal → ~/.config/kitty/kitty.conf
+├── tmux.conf                   # Tmux config → ~/.tmux.conf
+└── gitignore_global            # Global gitignore → ~/.gitignore_global
 ```
 
 ---
-
-## Documentation
-
-Detailed documentation for each component:
-
-| Document | Description |
-|:---------|:------------|
-| **[ZSH](doc/zsh.md)** | Shell configuration, plugins, and aliases |
-| **[Neovim](doc/nvim.md)** | Editor setup, LSP, keybindings |
-| **[Tmux](doc/tmux.md)** | Multiplexer keybindings and theme |
-| **[Kitty](doc/kitty.md)** | Terminal settings and shortcuts |
 
 ---
 
@@ -183,7 +162,7 @@ Detailed documentation for each component:
 <details>
 <summary><strong>Change Neovim Theme</strong></summary>
 
-Edit `profile/nvim/lua/plugins/editor.lua`:
+Edit `nvim/lua/plugins/editor.lua`:
 
 ```lua
 -- Switch from Dracula to TokyoNight
@@ -201,9 +180,25 @@ Edit `profile/nvim/lua/plugins/editor.lua`:
 </details>
 
 <details>
+<summary><strong>Customize ZSH Prompt</strong></summary>
+
+The prompt is fully parametrizable with 40+ configuration variables. Copy the example config and customize:
+
+```bash
+cp ~/.zsh.d/prompt.config.example ~/.zsh.d/prompt.config
+vim ~/.zsh.d/prompt.config  # Edit colors, symbols, visibility
+source ~/.zshrc
+```
+
+**Included presets**: Minimal, Nord, Dracula, Gruvbox, Solarized
+
+See [zsh.d/prompt.config.example](zsh.d/prompt.config.example) for full documentation.
+</details>
+
+<details>
 <summary><strong>Add ZSH Aliases</strong></summary>
 
-Edit `profile/zsh.d/alias.zsh`:
+Edit `zsh.d/alias.zsh`:
 
 ```bash
 # Add your custom aliases
@@ -214,18 +209,20 @@ alias myalias='command here'
 <details>
 <summary><strong>Change Kitty Theme</strong></summary>
 
-Edit `config/kitty/kitty.conf`:
+Edit `kitty.conf` and modify the color scheme section:
 
 ```conf
-# Available: dracula, tokyonight, nord, material-dark
-include themes/tokyonight.conf
+# =============================================================================
+# Color Scheme - TokyoNight Night
+# =============================================================================
+# Change colors to your preferred theme
 ```
 </details>
 
 <details>
-<summary><strong>Modify Tmux Theme</strong></summary>
+<summary><strong>Modify Tmux Configuration</strong></summary>
 
-Edit `profile/tmux.local` to customize colors and status bar.
+Edit `tmux.conf` directly to customize your tmux setup.
 </details>
 
 ---
@@ -244,11 +241,10 @@ make tools      # Install dev tools
 make kitty      # Install Kitty terminal
 ```
 
-### Tools Makefile (`tools/`)
+### Development Tools
 
 ```bash
-make all         # Python, Node.js, Go, Terraform, K8s
-make python      # Python (latest)
+make tools       # Install essential dev tools
 make nodejs      # Node.js (latest)
 make golang      # Go (latest)
 make terraform   # Terraform
@@ -266,6 +262,57 @@ make update      # Update ASDF plugins
 | `dclean` | Remove stopped Docker containers, dangling images & volumes |
 | `kleanup` | Clean up old Kubernetes ReplicaSets, completed Jobs, evicted Pods |
 | `passwdgen [len]` | Generate random passwords (default: 32 chars) |
+
+---
+
+## Testing & Validation
+
+### Automated Test Suite with Docker
+
+The repository includes a comprehensive test suite (`init.sh`) that validates integrity and functionality in an Ubuntu environment:
+
+**Quick Start:**
+
+```bash
+# Build and run complete test suite
+docker build -t dotfiles-test .
+docker run --rm dotfiles-test
+```
+
+**What Gets Tested:**
+
+| Test Category | Description |
+|:-------------|:------------|
+| **Structure** | Validates all required directories exist |
+| **Files** | Checks presence of critical configuration files |
+| **Syntax** | Validates Makefile, ZSH, and Lua syntax |
+| **Permissions** | Verifies file read permissions |
+| **Targets** | Tests all Makefile target definitions |
+| **Execution** | Runs portable targets (`profile`, `zsh`, `neovim`, `tmux`, `git`) |
+| **Symlinks** | Verifies correct symlink creation |
+| **Post-Install** | Validates installed configurations |
+| **Cleanup** | Tests cleanup target (dry-run) |
+
+**Interactive Exploration:**
+
+```bash
+# Open shell in test environment
+docker run --rm -it dotfiles-test /bin/zsh
+
+# Run tests manually
+docker run --rm -it dotfiles-test bash
+./dotfiles/init.sh
+```
+
+**CI/CD Integration:**
+
+```yaml
+# Example GitHub Actions workflow
+- name: Test Dotfiles
+  run: |
+    docker build -t dotfiles-test .
+    docker run --rm dotfiles-test
+```
 
 ---
 
@@ -307,6 +354,17 @@ nvim  # Fresh start
 time zsh -i -c exit
 ```
 </details>
+
+---
+
+## Documentation
+
+| Document | Purpose |
+|:---------|:--------|
+| **[README.md](README.md)** | This file - user-facing setup guide |
+| **[CLAUDE.md](CLAUDE.md)** | AI assistant guidance & development patterns |
+| **[HISTORY.md](HISTORY.md)** | Detailed changelog with technical specifics |
+| **[zsh.d/prompt.config.example](zsh.d/prompt.config.example)** | Prompt customization guide with 5 themes |
 
 ---
 

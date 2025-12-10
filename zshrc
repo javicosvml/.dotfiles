@@ -1,15 +1,10 @@
 # ~/.zshrc - Zsh configuration file for interactive shells
 
-# TMUX: Auto-start before instant prompt to avoid warnings
+# TMUX: Auto-start before prompt initialization
 if [[ -z "$TMUX" ]] && [[ -z "$VSCODE_INJECTION" ]] && [[ -o login ]]; then
   if command -v tmux &>/dev/null; then
     exec tmux new-session -A -s main
   fi
-fi
-
-# Enable Powerlevel10k instant prompt (must be near top)
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
 # Zinit: Plugin manager initialization
@@ -27,6 +22,7 @@ source "${ZSH_CONFIG_DIR}/env.zsh"        # Environment variables and paths
 source "${ZSH_CONFIG_DIR}/options.zsh"    # Zsh options (navigation, etc.)
 source "${ZSH_CONFIG_DIR}/history.zsh"    # History configuration
 source "${ZSH_CONFIG_DIR}/plugins.zsh"    # Zinit plugins and themes
+source "${ZSH_CONFIG_DIR}/prompt.zsh"     # Custom prompt configuration
 source "${ZSH_CONFIG_DIR}/completion.zsh" # Autocompletion settings
 source "${ZSH_CONFIG_DIR}/colors.zsh"     # Color configuration
 source "${ZSH_CONFIG_DIR}/kitty.zsh"      # Kitty terminal integration

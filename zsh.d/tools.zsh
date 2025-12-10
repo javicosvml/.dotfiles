@@ -28,11 +28,9 @@ fi
 #   fi
 # fi
 
-# EDITOR Setup: Neovim as default editor
+# Neovim aliases (EDITOR/VISUAL set in env.zsh)
 # Documentation: https://neovim.io/
 if command -v nvim &>/dev/null; then
-  export VISUAL="nvim"
-  export EDITOR="$VISUAL"
   alias vi="nvim"
   alias vim="nvim"
 fi
@@ -43,14 +41,11 @@ if command -v docker &>/dev/null; then
   export DOCKER_DEFAULT_PLATFORM="linux/amd64"
 fi
 
-# fzf - Fuzzy finder (if installed via Homebrew)
+# fzf - Fuzzy finder configuration
 # Documentation: https://github.com/junegunn/fzf
-# Uses $HOMEBREW_PREFIX cached in env.zsh
-if [[ -f "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh" ]]; then
-  source "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh"
-  source "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh"
-
-  # fzf configuration
+# Note: fzf scripts are lazy-loaded via Zinit in plugins.zsh
+if command -v fzf &>/dev/null || [[ -f "$HOMEBREW_PREFIX/opt/fzf/bin/fzf" ]]; then
+  # fzf appearance and behavior
   export FZF_DEFAULT_OPTS='
     --height 40%
     --layout=reverse
@@ -84,4 +79,12 @@ if command -v claude &>/dev/null; then
   # export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-opus-4-5-20251101-v1:0'
   export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0'
   export ANTHROPIC_SMALL_FAST_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0'
+fi
+
+# zoxide - Smarter cd command that learns your habits
+# Documentation: https://github.com/ajeetdsouza/zoxide
+if command -v zoxide &>/dev/null; then
+  eval "$(zoxide init zsh)"
+  # Optional: alias cd to z for seamless replacement
+  # alias cd="z"
 fi

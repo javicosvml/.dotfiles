@@ -1,8 +1,13 @@
 # Autocompletion Configuration
 # Note: compinit is handled by zinit turbo mode in plugins.zsh (zicompinit)
 
-# Bash compatibility (deferred)
-autoload -Uz bashcompinit && bashcompinit
+# Bash compatibility (deferred via precmd hook for ~20ms speedup)
+_load_bashcompinit() {
+    autoload -Uz bashcompinit && bashcompinit
+    # Remove this hook after first run
+    precmd_functions=(${precmd_functions:#_load_bashcompinit})
+}
+precmd_functions+=(_load_bashcompinit)
 
 # Zinit completions
 autoload -Uz _zinit
