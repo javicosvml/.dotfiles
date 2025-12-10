@@ -169,3 +169,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# AI Assistant Documentation
+# Claude Code documentation and instructions
+CLAUDE.md
+
+# Docker & Testing
+# Docker build artifacts and test logs
+test-*.log
+*-install.log
