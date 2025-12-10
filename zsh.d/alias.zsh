@@ -17,22 +17,23 @@ if command -v bat &>/dev/null; then
 fi
 
 # Modern ls alternatives with fallback to standard ls
-# lsd disabled due to performance/rendering issues
-# if command -v lsd &>/dev/null; then
-#   # lsd - Modern ls with icons
-#   alias ls='lsd'
-#   alias ll='lsd -lah'
-#   alias la='lsd -A'
-#   alias lt='lsd --tree'
-#   alias l='lsd -lh'
-# else
+if command -v eza &>/dev/null; then
+  # eza - Modern ls replacement with icons and git integration
+  # Documentation: https://github.com/eza-community/eza
+  alias ls='eza --icons --group-directories-first'
+  alias ll='eza -la --icons --group-directories-first --git'
+  alias la='eza -a --icons --group-directories-first'
+  alias lt='eza --tree --icons --group-directories-first --git-ignore'
+  alias l='eza -l --icons --group-directories-first'
+  alias tree='eza --tree --icons --git-ignore'
+else
   # Fallback to standard ls with colors
   alias ls='/bin/ls -G'
   alias ll='/bin/ls -lGah'
   alias la='/bin/ls -GA'
   alias lt='/bin/ls -lGR'
   alias l='/bin/ls -lGh'
-# fi
+fi
 
 # Modern Unix tools replacements
 if command -v fd &>/dev/null; then
