@@ -15,8 +15,8 @@ MAKEFLAGS += --no-builtin-rules
 # =============================================================================
 # Phony Targets
 # =============================================================================
-.PHONY: help all brew asdf kitty clean
-.PHONY: profile zsh neovim tmux git
+.PHONY: help all verify check-xcode brew asdf kitty clean
+.PHONY: profile zsh neovim tmux git install-tpm
 .PHONY: tools brew-tools nodejs golang ruby terraform
 .PHONY: kubernetes kubectl helm kind kubectx
 .PHONY: docker aws gcloud azure
@@ -106,7 +106,7 @@ help: ## Show this help message
 	@echo "$(BOLD)Dotfiles Makefile - macOS$(RESET)"
 	@echo ""
 	@echo "$(BOLD)Main Targets:$(RESET)"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -E '^(all|brew|asdf|kitty|profile|tools|clean):' | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)  %-28s$(RESET) %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -E '^(all|verify|brew|asdf|kitty|profile|tools|clean):' | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)  %-28s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(BOLD)Profile Targets:$(RESET)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -E '^(zsh|neovim|tmux|git):' | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)  %-28s$(RESET) %s\n", $$1, $$2}'
@@ -116,9 +116,67 @@ help: ## Show this help message
 	@echo ""
 
 # =============================================================================
+# Verification Targets
+# =============================================================================
+check-xcode: ## Verify Xcode Command Line Tools are installed
+	@echo "$(BOLD)Checking Xcode Command Line Tools...$(RESET)"
+	@if ! xcode-select -p &>/dev/null; then \
+		echo "$(RED)✗ Xcode Command Line Tools not found$(RESET)"; \
+		echo ""; \
+		echo "$(YELLOW)Installing Xcode Command Line Tools...$(RESET)"; \
+		echo "$(YELLOW)A dialog will appear - please click Install$(RESET)"; \
+		xcode-select --install; \
+		echo ""; \
+		echo "$(YELLOW)⚠ Please complete the installation and run 'make' again$(RESET)"; \
+		exit 1; \
+	else \
+		echo "$(GREEN)✓ Xcode Command Line Tools installed at $$(xcode-select -p)$(RESET)"; \
+	fi
+
+verify: check-xcode ## Verify all system dependencies
+	@echo ""
+	@echo "$(BOLD)System Verification$(RESET)"
+	@echo "$(BOLD)==================$(RESET)"
+	@echo ""
+	@echo "$(BOLD)macOS Version:$(RESET) $$(sw_vers -productVersion)"
+	@echo "$(BOLD)Architecture:$(RESET) $$(uname -m)"
+	@echo ""
+	@if command -v brew &>/dev/null; then \
+		echo "$(GREEN)✓$(RESET) Homebrew: $$(brew --version | head -1)"; \
+	else \
+		echo "$(YELLOW)✗$(RESET) Homebrew: Not installed (run: make brew)"; \
+	fi
+	@if command -v git &>/dev/null; then \
+		echo "$(GREEN)✓$(RESET) Git: $$(git --version)"; \
+	else \
+		echo "$(YELLOW)✗$(RESET) Git: Not installed (install Xcode tools)"; \
+	fi
+	@if command -v zsh &>/dev/null; then \
+		echo "$(GREEN)✓$(RESET) ZSH: $$(zsh --version)"; \
+	else \
+		echo "$(YELLOW)✗$(RESET) ZSH: Not installed (should be default on macOS)"; \
+	fi
+	@if command -v tmux &>/dev/null; then \
+		echo "$(GREEN)✓$(RESET) Tmux: $$(tmux -V)"; \
+	else \
+		echo "$(YELLOW)✗$(RESET) Tmux: Not installed (run: make brew-tools)"; \
+	fi
+	@if command -v nvim &>/dev/null; then \
+		echo "$(GREEN)✓$(RESET) Neovim: $$(nvim --version | head -1)"; \
+	else \
+		echo "$(YELLOW)✗$(RESET) Neovim: Not installed (run: make brew-tools)"; \
+	fi
+	@if command -v asdf &>/dev/null; then \
+		echo "$(GREEN)✓$(RESET) ASDF: $$(asdf --version | head -1)"; \
+	else \
+		echo "$(YELLOW)✗$(RESET) ASDF: Not installed (run: make asdf)"; \
+	fi
+	@echo ""
+
+# =============================================================================
 # Main Installation Targets
 # =============================================================================
-all: brew asdf profile tools kitty ## Install all components (full setup)
+all: check-xcode brew asdf profile tools kitty ## Install all components (full setup)
 	@echo ""
 	@echo "$(GREEN)$(BOLD)✓ Full installation complete!$(RESET)"
 	@echo ""
@@ -128,7 +186,7 @@ all: brew asdf profile tools kitty ## Install all components (full setup)
 	@echo "  3. Run 'nvim' to complete plugin installation"
 	@echo ""
 
-brew: ## Install Homebrew package manager
+brew: check-xcode ## Install Homebrew package manager
 	@echo "$(BOLD)Checking Homebrew installation...$(RESET)"
 	@if ! command -v brew >/dev/null 2>&1; then \
 		echo "$(YELLOW)Homebrew not found. Installing...$(RESET)"; \
@@ -268,6 +326,10 @@ zsh: ## Install ZSH configuration (Zinit + Powerlevel10k)
 
 neovim: ## Install Neovim configuration (lazy.nvim + LSP)
 	@echo "$(BOLD)Installing Neovim configuration...$(RESET)"
+	@if ! command -v nvim &>/dev/null; then \
+		echo "$(RED)✗ Neovim not found. Installing via Homebrew...$(RESET)"; \
+		brew install neovim; \
+	fi
 	@if [ ! -d "$(DOTFILES)/nvim" ]; then \
 		echo "$(RED)✗ nvim directory not found at $(DOTFILES)/nvim$(RESET)"; \
 		exit 1; \
@@ -283,8 +345,23 @@ neovim: ## Install Neovim configuration (lazy.nvim + LSP)
 	@echo "  ~/.config/nvim → $(DOTFILES)/nvim"
 	@echo "$(YELLOW)  Run 'nvim' to install plugins automatically$(RESET)"
 
-tmux: ## Install Tmux configuration (gpakosz/.tmux base)
+install-tpm: ## Install Tmux Plugin Manager (TPM)
+	@echo "$(BOLD)Installing TPM (Tmux Plugin Manager)...$(RESET)"
+	@if [ ! -d "$(HOME)/.tmux/plugins/tpm" ]; then \
+		echo "$(YELLOW)Cloning TPM repository...$(RESET)"; \
+		git clone https://github.com/tmux-plugins/tpm $(HOME)/.tmux/plugins/tpm; \
+		echo "$(GREEN)✓ TPM installed at ~/.tmux/plugins/tpm$(RESET)"; \
+		echo "$(YELLOW)  Note: Open tmux and press prefix + I to install plugins$(RESET)"; \
+	else \
+		echo "$(GREEN)✓ TPM already installed$(RESET)"; \
+	fi
+
+tmux: install-tpm ## Install Tmux configuration (gpakosz/.tmux base)
 	@echo "$(BOLD)Installing Tmux configuration...$(RESET)"
+	@if ! command -v tmux &>/dev/null; then \
+		echo "$(RED)✗ Tmux not found. Installing via Homebrew...$(RESET)"; \
+		brew install tmux; \
+	fi
 	@if [ ! -f "$(DOTFILES)/tmux.conf" ]; then \
 		echo "$(RED)✗ tmux.conf not found at $(DOTFILES)/tmux.conf$(RESET)"; \
 		exit 1; \
@@ -296,6 +373,7 @@ tmux: ## Install Tmux configuration (gpakosz/.tmux base)
 	@ln -sf $(DOTFILES)/tmux.conf $(HOME)/.tmux.conf
 	@echo "$(GREEN)✓ Tmux configuration installed$(RESET)"
 	@echo "  ~/.tmux.conf → $(DOTFILES)/tmux.conf"
+	@echo "$(YELLOW)  To install plugins: open tmux and press Ctrl+A then I$(RESET)"
 
 git: ## Install Git configuration (gitignore_global)
 	@echo "$(BOLD)Installing Git configuration...$(RESET)"
@@ -325,8 +403,10 @@ tools: brew-tools nodejs golang terraform kubernetes ## Install essential develo
 	@echo ""
 
 brew-tools: ## Install essential CLI tools via Homebrew
-	@echo "$(BOLD)Installing CLI tools via Homebrew...$(RESET)"
-	@for tool in wget curl jq yq gh git-lfs bat lsd fd ripgrep fzf htop tree tldr; do \
+	@echo "$(BOLD)Installing essential tools via Homebrew...$(RESET)"
+	@echo ""
+	@echo "$(BOLD)Core Tools:$(RESET)"
+	@for tool in git tmux neovim; do \
 		if brew list $$tool &>/dev/null; then \
 			echo "$(GREEN)✓$(RESET) $$tool"; \
 		else \
@@ -334,7 +414,18 @@ brew-tools: ## Install essential CLI tools via Homebrew
 			brew install --quiet $$tool || brew install $$tool; \
 		fi; \
 	done
-	@echo "$(GREEN)✓ Homebrew tools installed$(RESET)"
+	@echo ""
+	@echo "$(BOLD)CLI Utilities:$(RESET)"
+	@for tool in wget curl jq yq gh git-lfs bat lsd fd ripgrep fzf htop tree tldr zoxide direnv; do \
+		if brew list $$tool &>/dev/null; then \
+			echo "$(GREEN)✓$(RESET) $$tool"; \
+		else \
+			echo "$(YELLOW)Installing $$tool...$(RESET)"; \
+			brew install --quiet $$tool || brew install $$tool; \
+		fi; \
+	done
+	@echo ""
+	@echo "$(GREEN)✓ All essential tools installed$(RESET)"
 
 nodejs: ## Install Node.js (latest stable)
 	$(call install_tool,nodejs,)
