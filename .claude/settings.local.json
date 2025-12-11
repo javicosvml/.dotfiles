@@ -82,7 +82,15 @@
       "Bash(fi)",
       "Bash(source ~/.zshrc)",
       "Bash(ll)",
-      "Bash(zoxide --version:*)"
+      "Bash(zoxide --version:*)",
+      "Bash(zsh -n:*)",
+      "Bash(for:*)",
+      "Bash(do zsh -n \"$f\")",
+      "Bash(echo:*)",
+      "Bash(./preview-ls-colors.sh:*)",
+      "Bash(./apply-tokyonight.sh:*)",
+      "Bash(tmux source-file:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

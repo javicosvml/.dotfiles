@@ -17,7 +17,44 @@ export LESSCHARSET='utf-8'
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Enable colors for macOS ls
   export CLICOLOR=1
-  export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd
+
+  # ============================================================================
+  # LSCOLORS Configuration
+  # ============================================================================
+  # Format: 11 pairs of (foreground + background) for:
+  # 1. directory  2. symlink  3. socket  4. pipe  5. executable
+  # 6. block special  7. char special  8. setuid exec  9. setgid exec
+  # 10. dir writable+sticky  11. dir writable no-sticky
+  #
+  # Color codes (lowercase=normal, uppercase=bold):
+  # a/A=black, b/B=red, c/C=green, d/D=brown, e/E=blue, f/F=magenta
+  # g/G=cyan, h/H=light grey, x=default foreground/background
+  # ============================================================================
+
+  # Choose your theme by uncommenting ONE of the following:
+
+  # Theme: TokyoNight (matches Kitty theme)
+  # Directories: Bold Cyan, Symlinks: Bold Magenta, Executables: Bold Green
+  export LSCOLORS=GxFxCxDxBxegedabagacad
+
+  # Theme: Dracula (matches Neovim theme)
+  # Directories: Bold Magenta, Symlinks: Bold Cyan, Executables: Bold Green
+  # export LSCOLORS=FxGxCxDxBxegedabagacad
+
+  # Theme: Nord
+  # Directories: Bold Blue, Symlinks: Bold Cyan, Executables: Bold Green
+  # export LSCOLORS=ExGxCxDxBxegedabagacad
+
+  # Theme: Gruvbox
+  # Directories: Bold Brown, Symlinks: Bold Cyan, Executables: Bold Green
+  # export LSCOLORS=DxGxCxDxBxegedabagacad
+
+  # Theme: Solarized
+  # Directories: Bold Blue, Symlinks: Bold Cyan, Executables: Bold Red
+  # export LSCOLORS=ExGxBxDxCxegedabagacad
+
+  # Theme: Default (original)
+  # export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd
 
   # If GNU coreutils are installed (brew install coreutils)
   if command -v gdircolors >/dev/null 2>&1; then
@@ -30,8 +67,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
   fi
 
-  # Colored grep output
-  export GREP_COLOR='1;32'
+  # Colored grep output (matches selected theme)
+  export GREP_COLOR='1;32'  # Bold green
   alias grep='grep --color=auto'
   alias fgrep='fgrep --color=auto'
   alias egrep='egrep --color=auto'

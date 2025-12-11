@@ -76,9 +76,8 @@ fi
 if command -v claude &>/dev/null; then
   export CLAUDE_CODE_USE_BEDROCK=1
   export AWS_REGION=us-east-1
-  # export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-opus-4-5-20251101-v1:0'
-  export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0'
-  export ANTHROPIC_SMALL_FAST_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0'
+  # export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0'
+  export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0'
 fi
 
 # zoxide - Smarter cd command that learns your habits
