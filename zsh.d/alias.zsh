@@ -17,22 +17,31 @@ if command -v bat &>/dev/null; then
 fi
 
 # Modern ls alternatives with fallback to standard ls
-if command -v eza &>/dev/null; then
-  # eza - Modern ls replacement with icons and git integration
+# Note: Using native /bin/ls by default for reliability and speed
+# lsd can cause "os error 60" timeouts with iCloud/network files in HOME
+alias ls='/bin/ls -G'
+alias ll='/bin/ls -lGah'
+alias la='/bin/ls -GA'
+alias lt='/bin/ls -lGR'
+alias l='/bin/ls -lGh'
+
+# Optional: lsd available explicitly when needed (use 'lsl' command)
+if command -v lsd &>/dev/null; then
+  # lsd - Modern ls with icons (use explicitly to avoid timeout issues)
+  # Documentation: https://github.com/lsd-rs/lsd
+  alias lsl='lsd --group-directories-first --git-repos=never'
+  alias lsll='lsd -lA --group-directories-first --git-repos=never'
+  alias lsla='lsd -A --group-directories-first --git-repos=never'
+  alias lslt='lsd --tree --group-directories-first --ignore-glob .git'
+  alias tree='lsd --tree --ignore-glob .git'
+elif command -v eza &>/dev/null; then
+  # eza - Alternative modern ls replacement
   # Documentation: https://github.com/eza-community/eza
-  alias ls='eza --icons --group-directories-first'
-  alias ll='eza -la --icons --group-directories-first --git'
-  alias la='eza -a --icons --group-directories-first'
-  alias lt='eza --tree --icons --group-directories-first --git-ignore'
-  alias l='eza -l --icons --group-directories-first'
+  alias lsl='eza --icons --group-directories-first'
+  alias lsll='eza -la --icons --group-directories-first --git'
+  alias lsla='eza -a --icons --group-directories-first'
+  alias lslt='eza --tree --icons --group-directories-first --git-ignore'
   alias tree='eza --tree --icons --git-ignore'
-else
-  # Fallback to standard ls with colors
-  alias ls='/bin/ls -G'
-  alias ll='/bin/ls -lGah'
-  alias la='/bin/ls -GA'
-  alias lt='/bin/ls -lGR'
-  alias l='/bin/ls -lGh'
 fi
 
 # Modern Unix tools replacements
@@ -89,3 +98,40 @@ alias ports='lsof -i -P | grep LISTEN'
 # Quick edits
 alias zshrc='$EDITOR ~/.zshrc'
 alias zshreload='source ~/.zshrc'
+
+# Git shortcuts (if git is available)
+if command -v git &>/dev/null; then
+  alias g='git'
+  alias gs='git status'
+  alias gst='git status -sb'
+  alias ga='git add'
+  alias gc='git commit'
+  alias gp='git push'
+  alias gpl='git pull'
+  alias gd='git diff'
+  alias gco='git checkout'
+  alias gb='git branch'
+  alias gl='git log --oneline --graph --decorate'
+  alias glog='git log --oneline --graph --decorate --all'
+fi
+
+# Tmux shortcuts (if tmux is available)
+if command -v tmux &>/dev/null; then
+  alias t='tmux'
+  alias ta='tmux attach -t'
+  alias tn='tmux new-session -s'
+  alias tl='tmux list-sessions'
+  alias tk='tmux kill-session -t'
+fi
+
+# Homebrew shortcuts
+if command -v brew &>/dev/null; then
+  alias brewup='brew update && brew upgrade && brew cleanup'
+  alias brewinfo='brew info'
+  alias brewlist='brew list'
+  alias brewsearch='brew search'
+fi
+
+# macOS utilities
+alias cpu='top -o cpu'
+alias mem='top -o mem'

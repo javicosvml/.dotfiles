@@ -1,17 +1,29 @@
 -- Editor plugins (file explorer, fuzzy finder, etc.)
 return {
-  -- Color scheme
+  -- Color scheme: TokyoNight Night
   {
-    "Mofiqul/dracula.nvim",
+    "folke/tokyonight.nvim",
     lazy = false,
     priority = 1000,
     opts = {
-      transparent_bg = false,
-      italic_comment = true,
+      style = "night", -- night, storm, day, moon
+      transparent = false,
+      terminal_colors = true,
+      styles = {
+        comments = { italic = true },
+        keywords = { italic = false },
+        functions = {},
+        variables = {},
+      },
+      sidebars = { "qf", "help", "neo-tree" },
+      day_brightness = 0.3,
+      hide_inactive_statusline = false,
+      dim_inactive = false,
+      lualine_bold = true,
     },
     config = function(_, opts)
-      require("dracula").setup(opts)
-      vim.cmd.colorscheme("dracula")
+      require("tokyonight").setup(opts)
+      vim.cmd.colorscheme("tokyonight-night")
     end,
   },
 
@@ -101,7 +113,7 @@ return {
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = {
       options = {
-        theme = "dracula",
+        theme = "tokyonight",
         globalstatus = true,
         component_separators = { left = "", right = "" },
         section_separators = { left = "", right = "" },

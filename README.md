@@ -70,17 +70,14 @@
 ## Installation
 
 > [!IMPORTANT]
-> Review the code before running. These are **my** personal dotfiles. Fork and customize!
+> Review the code before running. These are **my** personal dotfiles designed for **macOS only**. Fork and customize!
 
 ### Prerequisites
 
-- macOS Ventura 13.0+
-- Apple Silicon (M1/M2/M3/M4) or Intel Mac
-- Xcode Command Line Tools
+- **macOS Ventura 13.0+** (Apple Silicon or Intel)
+- **Git** (comes with Xcode Command Line Tools)
 
-```bash
-xcode-select --install
-```
+The Makefile will automatically check and install Xcode Command Line Tools if needed.
 
 ### Quick Start
 
@@ -89,26 +86,48 @@ xcode-select --install
 git clone https://github.com/jcc-tck/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
-# Install everything
+# Verify system dependencies
+make verify
+
+# Install everything (automatic & autonomous)
 make all
 ```
 
+The `make all` command will:
+1. ✓ Check & install Xcode Command Line Tools (if needed)
+2. ✓ Install Homebrew package manager
+3. ✓ Install ASDF version manager
+4. ✓ Install core tools (Git, Tmux, Neovim)
+5. ✓ Install CLI utilities (bat, lsd, fd, ripgrep, fzf, etc.)
+6. ✓ Configure ZSH with Zinit + custom prompt
+7. ✓ Configure Neovim with lazy.nvim + LSP
+8. ✓ Configure Tmux with TPM (plugins)
+9. ✓ Configure Git global settings
+10. ✓ Install development tools (Node.js, Go, Terraform, Kubernetes)
+11. ✓ Install Kitty terminal
+
 ### Step-by-Step Installation
 
+If you prefer granular control:
+
 ```bash
-# 1. Install Homebrew
+# 1. Verify prerequisites
+make verify
+
+# 2. Install Homebrew (if not installed)
 make brew
 
-# 2. Install ASDF version manager
-make asdf && source ~/.zshrc
+# 3. Install ASDF version manager
+make asdf
+source ~/.zshrc  # Activate ASDF
 
-# 3. Install shell/editor configurations
+# 4. Install shell/editor configurations
 make profile
 
-# 4. Install development tools (Node.js, Go, Terraform, etc.)
+# 5. Install development tools
 make tools
 
-# 5. (Optional) Install Kitty terminal
+# 6. Install Kitty terminal (optional)
 make kitty
 ```
 
@@ -133,15 +152,21 @@ make kitty
 ```
 ~/.dotfiles/
 ├── Makefile                    # Unified installer (main + tools + profile)
-├── Dockerfile                  # Docker test environment
-├── init.sh                     # Complete test suite
+├── README.md                   # This file - user-facing guide
+├── CLAUDE.md                   # AI assistant guidance
+├── HISTORY.md                  # Detailed changelog
 ├── zshrc                       # ZSH entry point → ~/.zshrc
 ├── zsh.d/                      # Modular ZSH → ~/.zsh.d/
-│   ├── env.zsh                 # Environment & PATH
-│   ├── plugins.zsh             # Zinit plugins
-│   ├── alias.zsh               # Shell aliases
-│   ├── tools.zsh               # Tool integrations (ASDF, etc.)
-│   └── ...                     # More modules
+│   ├── env.zsh                 # Environment & PATH (Homebrew, locale)
+│   ├── plugins.zsh             # Zinit plugins (gitstatus, completions)
+│   ├── prompt.zsh              # Custom parametrizable prompt
+│   ├── alias.zsh               # Shell aliases (lsd, bat, git, tmux)
+│   ├── tools.zsh               # Tool integrations (ASDF, fzf, zoxide)
+│   ├── history.zsh             # History configuration
+│   ├── options.zsh             # ZSH options
+│   ├── completion.zsh          # Deferred completions
+│   ├── colors.zsh              # Color configuration
+│   └── kitty.zsh               # Kitty integration
 ├── nvim/                       # Neovim → ~/.config/nvim
 │   ├── init.lua                # Entry point
 │   ├── lazy-lock.json          # Plugin lockfile
@@ -160,23 +185,32 @@ make kitty
 ## Customization
 
 <details>
-<summary><strong>Change Neovim Theme</strong></summary>
+<summary><strong>Change Color Theme</strong></summary>
 
-Edit `nvim/lua/plugins/editor.lua`:
+All components are unified with **TokyoNight Night** theme:
+- ✅ Kitty terminal
+- ✅ Neovim editor
+- ✅ Tmux status bar
+- ✅ ls colors
 
+To change to another theme:
+
+**Neovim**: Edit `nvim/lua/plugins/editor.lua`
 ```lua
--- Switch from Dracula to TokyoNight
+-- Change to Dracula
 {
-  "folke/tokyonight.nvim",
+  "Mofiqul/dracula.nvim",
   lazy = false,
   priority = 1000,
-  opts = { style = "night" },
-  config = function(_, opts)
-    require("tokyonight").setup(opts)
-    vim.cmd.colorscheme("tokyonight")
+  config = function()
+    vim.cmd.colorscheme("dracula")
   end,
-},
+}
 ```
+
+**Tmux**: Edit `tmux.conf` color values (lines 5-11)
+
+**ls colors**: Run `~/.dotfiles/preview-ls-colors.sh` and edit `zsh.d/colors.zsh`
 </details>
 
 <details>
@@ -207,6 +241,33 @@ alias myalias='command here'
 </details>
 
 <details>
+<summary><strong>Change ls Colors Theme</strong></summary>
+
+Multiple color themes available for `ls` command. Preview them:
+
+```bash
+~/.dotfiles/preview-ls-colors.sh
+```
+
+Edit `zsh.d/colors.zsh` and uncomment your preferred theme:
+
+```bash
+# Available themes:
+# - TokyoNight (default, matches Kitty)
+# - Dracula (matches Neovim)
+# - Nord
+# - Gruvbox
+# - Solarized
+
+# Uncomment one:
+export LSCOLORS=GxFxCxDxBxegedabagacad  # TokyoNight
+# export LSCOLORS=FxGxCxDxBxegedabagacad  # Dracula
+```
+
+Apply: `source ~/.zshrc`
+</details>
+
+<details>
 <summary><strong>Change Kitty Theme</strong></summary>
 
 Edit `kitty.conf` and modify the color scheme section:
@@ -229,90 +290,65 @@ Edit `tmux.conf` directly to customize your tmux setup.
 
 ## Make Commands
 
-### Main Makefile
+### Main Commands
 
 ```bash
 make help       # Show all available targets
-make all        # Install everything
-make brew       # Install Homebrew
-make asdf       # Install ASDF
-make profile    # Install shell/editor configs
-make tools      # Install dev tools
+make verify     # Verify system dependencies & configuration
+make all        # Install everything (autonomous installation)
+make brew       # Install Homebrew package manager
+make asdf       # Install ASDF version manager
+make profile    # Install all shell/editor configs
+make tools      # Install all development tools
 make kitty      # Install Kitty terminal
+make clean      # Remove symlinked configurations
+```
+
+### Profile Configuration
+
+```bash
+make zsh        # Install ZSH configuration only
+make neovim     # Install Neovim configuration only
+make tmux       # Install Tmux configuration + TPM
+make git        # Install Git global configuration
 ```
 
 ### Development Tools
 
 ```bash
-make tools       # Install essential dev tools
-make nodejs      # Node.js (latest)
-make golang      # Go (latest)
-make terraform   # Terraform
-make kubernetes  # kubectl, helm, kind, kubectx
-make list        # List installed tools
-make update      # Update ASDF plugins
+make brew-tools  # Install essential CLI tools (tmux, nvim, bat, lsd, etc.)
+make nodejs      # Install Node.js (latest stable)
+make golang      # Install Go (latest stable)
+make terraform   # Install Terraform (latest stable)
+make kubernetes  # Install kubectl, helm, kind, kubectx
+make docker      # Install Docker Desktop
+make aws         # Install AWS CLI
+make gcloud      # Install Google Cloud SDK
+make azure       # Install Azure CLI
+make list        # List all installed ASDF tools
+make update      # Update ASDF and all plugins
 ```
 
 ---
 
-## Utility Scripts
+## Validation & Troubleshooting
 
-| Script | Description |
-|:-------|:------------|
-| `dclean` | Remove stopped Docker containers, dangling images & volumes |
-| `kleanup` | Clean up old Kubernetes ReplicaSets, completed Jobs, evicted Pods |
-| `passwdgen [len]` | Generate random passwords (default: 32 chars) |
+### System Verification
 
----
-
-## Testing & Validation
-
-### Automated Test Suite with Docker
-
-The repository includes a comprehensive test suite (`init.sh`) that validates integrity and functionality in an Ubuntu environment:
-
-**Quick Start:**
+Before installation, verify your system meets all requirements:
 
 ```bash
-# Build and run complete test suite
-docker build -t dotfiles-test .
-docker run --rm dotfiles-test
+make verify
 ```
 
-**What Gets Tested:**
-
-| Test Category | Description |
-|:-------------|:------------|
-| **Structure** | Validates all required directories exist |
-| **Files** | Checks presence of critical configuration files |
-| **Syntax** | Validates Makefile, ZSH, and Lua syntax |
-| **Permissions** | Verifies file read permissions |
-| **Targets** | Tests all Makefile target definitions |
-| **Execution** | Runs portable targets (`profile`, `zsh`, `neovim`, `tmux`, `git`) |
-| **Symlinks** | Verifies correct symlink creation |
-| **Post-Install** | Validates installed configurations |
-| **Cleanup** | Tests cleanup target (dry-run) |
-
-**Interactive Exploration:**
-
-```bash
-# Open shell in test environment
-docker run --rm -it dotfiles-test /bin/zsh
-
-# Run tests manually
-docker run --rm -it dotfiles-test bash
-./dotfiles/init.sh
-```
-
-**CI/CD Integration:**
-
-```yaml
-# Example GitHub Actions workflow
-- name: Test Dotfiles
-  run: |
-    docker build -t dotfiles-test .
-    docker run --rm dotfiles-test
-```
+This command checks:
+- ✓ Xcode Command Line Tools
+- ✓ macOS version and architecture
+- ✓ Homebrew installation
+- ✓ Git availability
+- ✓ ZSH shell (default on macOS)
+- ✓ Tmux, Neovim (after installation)
+- ✓ ASDF version manager (after installation)
 
 ---
 
@@ -361,10 +397,10 @@ time zsh -i -c exit
 
 | Document | Purpose |
 |:---------|:--------|
-| **[README.md](README.md)** | This file - user-facing setup guide |
+| **[README.md](README.md)** | This file - user-facing setup guide for macOS |
 | **[CLAUDE.md](CLAUDE.md)** | AI assistant guidance & development patterns |
 | **[HISTORY.md](HISTORY.md)** | Detailed changelog with technical specifics |
-| **[zsh.d/prompt.config.example](zsh.d/prompt.config.example)** | Prompt customization guide with 5 themes |
+| **[Makefile](Makefile)** | Complete installation automation (410+ lines) |
 
 ---
 
