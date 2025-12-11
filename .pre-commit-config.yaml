@@ -59,3 +59,14 @@ repos:
     rev: v8.29.1
     hooks:
       - id: gitleaks
+
+  # Custom hooks for dotfiles validation
+  - repo: local
+    hooks:
+      - id: validate-configs
+        name: Validate tmux and zsh configurations
+        entry: /bin/bash scripts/validate-configs.sh
+        language: script
+        files: ^(tmux\.conf|zshrc|zsh\.d/.*\.zsh)$
+        pass_filenames: false
+        stages: [pre-commit]
