@@ -90,7 +90,18 @@
       "Bash(./preview-ls-colors.sh:*)",
       "Bash(./apply-tokyonight.sh:*)",
       "Bash(tmux source-file:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(zsh:*)",
+      "Bash(brew list:*)",
+      "Bash(/Users/javiercoscolla/.dotfiles/scripts/validate-setup.sh:*)",
+      "Bash(bash:*)",
+      "Bash(CHANGES_SUMMARY.md MACOS_OPTIMIZATIONS.md NODE_LTS_AUTO_INSTALL.md )",
+      "Bash(QUICKSTART.md SETUP_MACOS.md)",
+      "Bash(git reset:*)",
+      "Bash(tmux:*)",
+      "Bash(pbcopy)",
+      "Bash(pbpaste)",
+      "Bash(__NEW_LINE__ cd /Users/javiercoscolla/.dotfiles)"
     ],
     "deny": [],
     "ask": []
