@@ -1,21 +1,32 @@
 # ZSH Tools Configuration
 # Optimized for macOS with Homebrew
 
-# ASDF Version Manager (Homebrew installation)
+# ASDF Version Manager (macOS optimized)
 # Documentation: https://asdf-vm.com/
 # Uses $HOMEBREW_PREFIX cached in env.zsh to avoid slow brew --prefix calls
-if [[ -f "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh" ]]; then
-  source "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh"
-  # Prepend ASDF shims to PATH to prioritize ASDF-managed tools over Homebrew
-  export PATH="$HOME/.asdf/shims:$PATH"
-  # Append completions to fpath
-  fpath=($HOMEBREW_PREFIX/opt/asdf/share/zsh/site-functions $fpath)
-elif [[ -f "$HOME/.asdf/asdf.sh" ]]; then
-  # Fallback to manual installation
-  source "$HOME/.asdf/asdf.sh"
-  export PATH="$HOME/.asdf/shims:$PATH"
-  fpath=(${ASDF_DIR}/completions $fpath)
-fi
+_asdf_init() {
+  local asdf_path=""
+
+  # Check Homebrew installation first (macOS standard)
+  if [[ -f "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh" ]]; then
+    asdf_path="$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh"
+  elif [[ -f "$HOME/.asdf/asdf.sh" ]]; then
+    # Fallback to manual installation
+    asdf_path="$HOME/.asdf/asdf.sh"
+  fi
+
+  if [[ -n "$asdf_path" ]]; then
+    source "$asdf_path" 2>/dev/null || return
+    export PATH="$HOME/.asdf/shims:$PATH"
+    # Completions
+    if [[ -d "$HOMEBREW_PREFIX/opt/asdf/share/zsh/site-functions" ]]; then
+      fpath=($HOMEBREW_PREFIX/opt/asdf/share/zsh/site-functions $fpath)
+    elif [[ -d "${ASDF_DIR}/completions" ]]; then
+      fpath=(${ASDF_DIR}/completions $fpath)
+    fi
+  fi
+}
+_asdf_init
 
 # TMUX: Start a new tmux session if not already inside one
 # Documentation: https://github.com/tmux/tmux

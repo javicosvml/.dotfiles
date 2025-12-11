@@ -17,7 +17,7 @@ MAKEFLAGS += --no-builtin-rules
 # =============================================================================
 .PHONY: help all verify check-xcode brew asdf kitty clean
 .PHONY: profile zsh neovim tmux git install-tpm
-.PHONY: tools brew-tools nodejs golang ruby terraform
+.PHONY: tools brew-tools nodejs nodejs-update golang ruby terraform
 .PHONY: kubernetes kubectl helm kind kubectx
 .PHONY: docker aws gcloud azure
 .PHONY: list update
@@ -427,8 +427,73 @@ brew-tools: ## Install essential CLI tools via Homebrew
 	@echo ""
 	@echo "$(GREEN)✓ All essential tools installed$(RESET)"
 
-nodejs: ## Install Node.js (latest stable)
-	$(call install_tool,nodejs,)
+nodejs: ## Install Node.js (latest LTS - even version numbers: 20, 22, 24, etc.)
+	$(call check_asdf)
+	$(call install_plugin,nodejs,)
+	@echo "$(YELLOW)Installing Node.js LTS (latest)...$(RESET)"
+	@echo "$(BLUE)ℹ Node.js LTS versions use even major numbers (20, 22, 24, etc.)$(RESET)"
+	@echo ""
+	@LATEST_LTS=$$(asdf list all nodejs 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$$' | while read v; do MAJOR=$$(echo $$v | cut -d. -f1); if (( $$MAJOR % 2 == 0 )); then echo $$v; fi; done | sort -V | tail -1); \
+	if [ -z "$$LATEST_LTS" ]; then \
+		echo "$(RED)✗ Could not determine latest Node.js LTS version$(RESET)"; \
+		exit 1; \
+	fi; \
+	echo "  Latest LTS version: $$LATEST_LTS"; \
+	if asdf list nodejs 2>/dev/null | grep -q "$$LATEST_LTS"; then \
+		echo "$(GREEN)✓$(RESET) Node.js $$LATEST_LTS already installed"; \
+	else \
+		echo "  Installing Node.js $$LATEST_LTS..."; \
+		if asdf install nodejs $$LATEST_LTS 2>&1; then \
+			echo "$(GREEN)✓$(RESET) Node.js $$LATEST_LTS installed"; \
+		else \
+			echo "$(RED)✗ Installation failed for Node.js $$LATEST_LTS$(RESET)"; \
+			exit 1; \
+		fi; \
+	fi; \
+	echo "  Setting Node.js $$LATEST_LTS as default..."; \
+	asdf set --home nodejs $$LATEST_LTS; \
+	asdf reshim nodejs 2>/dev/null || true; \
+	echo "$(GREEN)✓ Node.js $$LATEST_LTS is now the global version$(RESET)"; \
+	echo ""; \
+	echo "$(BLUE)Node.js Release Schedule:$(RESET)"; \
+	echo "  • v20: Active until 2026-04-30"; \
+	echo "  • v22: Active until 2027-04-30"; \
+	echo "  • v24: Active until 2028-04-30"; \
+	echo "  • v26: Expected October 2025"
+
+nodejs-update: ## Check and update Node.js to latest LTS if newer version available
+	$(call check_asdf)
+	@echo "$(YELLOW)Checking for Node.js LTS updates...$(RESET)"
+	@CURRENT_VERSION=$$(asdf current nodejs 2>/dev/null | grep -E '^nodejs' | awk '{print $$2}'); \
+	if [ -z "$$CURRENT_VERSION" ] || [ "$$CURRENT_VERSION" = "______" ]; then \
+		echo "$(YELLOW)⚠ No global Node.js version set. Run 'make nodejs' first.$(RESET)"; \
+		exit 1; \
+	fi; \
+	echo "  Current version: $$CURRENT_VERSION"; \
+	echo ""; \
+	LATEST_LTS=$$(asdf list all nodejs 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$$' | while read v; do MAJOR=$$(echo $$v | cut -d. -f1); if (( $$MAJOR % 2 == 0 )); then echo $$v; fi; done | sort -V | tail -1); \
+	echo "  Latest LTS:     $$LATEST_LTS"; \
+	echo ""; \
+	if [ "$$CURRENT_VERSION" = "$$LATEST_LTS" ]; then \
+		echo "$(GREEN)✓ Already running latest LTS version$(RESET)"; \
+		exit 0; \
+	fi; \
+	echo "$(YELLOW)Newer LTS version available. Installing...$(RESET)"; \
+	if asdf list nodejs 2>/dev/null | grep -q "$$LATEST_LTS"; then \
+		echo "$(GREEN)✓$(RESET) Node.js $$LATEST_LTS already installed"; \
+	else \
+		echo "  Downloading Node.js $$LATEST_LTS..."; \
+		asdf install nodejs $$LATEST_LTS 2>&1 || { echo "$(RED)✗ Installation failed$(RESET)"; exit 1; }; \
+		echo "$(GREEN)✓$(RESET) Node.js $$LATEST_LTS installed"; \
+	fi; \
+	echo ""; \
+	echo "  Setting Node.js $$LATEST_LTS as default..."; \
+	asdf set --home nodejs $$LATEST_LTS; \
+	asdf reshim nodejs 2>/dev/null || true; \
+	echo ""; \
+	echo "$(GREEN)✓ Updated from $$CURRENT_VERSION to $$LATEST_LTS$(RESET)"; \
+	echo ""; \
+	node --version
 
 golang: ## Install Go (latest stable)
 	$(call install_tool,golang,)

@@ -1,13 +1,21 @@
 # Environment Variables and Paths
 # Loaded early in shell initialization
 
+# macOS specific environment
+export OSTYPE="${OSTYPE:-darwin}"
+
 # Homebrew paths (macOS specific)
 # Cache brew prefix to avoid repeated slow calls
 # Manual setup is ~100ms faster than 'brew shellenv'
-if [[ "$(uname -m)" == "arm64" ]]; then
-  export HOMEBREW_PREFIX="/opt/homebrew"
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  if [[ "$(uname -m)" == "arm64" ]]; then
+    export HOMEBREW_PREFIX="/opt/homebrew"
+  else
+    export HOMEBREW_PREFIX="/usr/local"
+  fi
 else
-  export HOMEBREW_PREFIX="/usr/local"
+  # Fallback for non-macOS systems
+  export HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-/usr/local}"
 fi
 
 # Export Homebrew environment manually (faster than eval)

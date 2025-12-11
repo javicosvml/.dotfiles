@@ -1,8 +1,10 @@
 # ~/.zshrc - Zsh configuration file for interactive shells
 
 # TMUX: Auto-start before prompt initialization
-if [[ -z "$TMUX" ]] && [[ -z "$VSCODE_INJECTION" ]] && [[ -o login ]]; then
+# Only auto-start in interactive login shells, not in scripts or non-interactive environments
+if [[ -z "$TMUX" ]] && [[ -z "$VSCODE_INJECTION" ]] && [[ -o login ]] && [[ -t 0 ]]; then
   if command -v tmux &>/dev/null; then
+    # Try to attach to existing session, create new one if it doesn't exist
     exec tmux new-session -A -s main
   fi
 fi

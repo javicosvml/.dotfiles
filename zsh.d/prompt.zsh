@@ -43,14 +43,21 @@ typeset -g PROMPT_SHOW_KUBECTL=true         # Show kubectl context (true/false)
 # ============================================================================
 
 # Git prompt using gitstatus (10x faster than vcs_info)
+# Falls back to vcs_info if gitstatus is not available
 function prompt_gitstatus() {
     [[ "$PROMPT_SHOW_GIT" != "true" ]] && return
 
+    # Check if gitstatus is available
+    if ! command -v gitstatus_query &>/dev/null; then
+        return 1
+    fi
+
     # Start gitstatus instance if not running
-    gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
+    gitstatus_stop 'MY' 2>/dev/null
+    gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY' 2>/dev/null || return 1
 
     # Query gitstatus for git repo info
-    gitstatus_query 'MY' || return 1  # Not in a git repo
+    gitstatus_query 'MY' 2>/dev/null || return 1  # Not in a git repo
 
     local branch="${VCS_STATUS_LOCAL_BRANCH:-@${VCS_STATUS_COMMIT}}"
 
@@ -64,9 +71,30 @@ function prompt_gitstatus() {
     echo " %F{$PROMPT_COLOR_GIT_CLEAN}(%f%F{$PROMPT_COLOR_GIT_BRANCH}${branch}%f${indicators}%F{$PROMPT_COLOR_GIT_CLEAN})%f"
 }
 
+# Fallback git prompt using vcs_info (slower but built-in)
+function prompt_git_fallback() {
+    [[ "$PROMPT_SHOW_GIT" != "true" ]] && return
+
+    # Initialize vcs_info if not already done
+    if ! command -v vcs_info &>/dev/null; then
+        autoload -Uz vcs_info
+        zstyle ':vcs_info:*' enable git
+        zstyle ':vcs_info:git*' formats ' (%b)'
+        zstyle ':vcs_info:git*' actionformats ' (%b|%a)'
+    fi
+
+    vcs_info
+    if [[ -n "$vcs_info_msg_0_" ]]; then
+        echo "%F{$PROMPT_COLOR_GIT_CLEAN}%f%F{$PROMPT_COLOR_GIT_BRANCH}$vcs_info_msg_0_%f"
+    fi
+}
+
 # Hook to update git status before each prompt
 precmd() {
-    # gitstatus updates asynchronously, no blocking calls
+    # vcs_info updates synchronously for the fallback
+    if ! command -v gitstatus_query &>/dev/null; then
+        vcs_info
+    fi
 }
 
 # Function to display virtualenv/conda environment
@@ -74,13 +102,13 @@ prompt_virtualenv() {
     [[ "$PROMPT_SHOW_VIRTUALENV" != "true" ]] && return
 
     if [[ -n "$VIRTUAL_ENV" ]]; then
-        echo "%F{$PROMPT_COLOR_VIRTUALENV}($(basename $VIRTUAL_ENV))%f "
+        echo "%F{${PROMPT_COLOR_VIRTUALENV:-37}}($(basename $VIRTUAL_ENV))%f " 2>/dev/null || echo "($(basename $VIRTUAL_ENV)) "
     elif [[ -n "$CONDA_DEFAULT_ENV" ]]; then
-        echo "%F{$PROMPT_COLOR_VIRTUALENV}($CONDA_DEFAULT_ENV)%f "
+        echo "%F{${PROMPT_COLOR_VIRTUALENV:-37}}($CONDA_DEFAULT_ENV)%f " 2>/dev/null || echo "($CONDA_DEFAULT_ENV) "
     fi
 }
 
-# Function to display kubectl context with caching
+# Function to display kubectl context with caching (macOS optimized)
 # Cache invalidates when ~/.kube/config changes
 typeset -g _kubectl_context_cache=""
 typeset -g _kubectl_config_mtime=0
@@ -97,26 +125,36 @@ prompt_kubectl() {
         return
     fi
 
-    # Check if cache is stale (config file modified)
-    local current_mtime=$(stat -f %m "$kubeconfig" 2>/dev/null || echo 0)
+    # macOS-specific file modification time check using stat -f
+    local current_mtime
+    current_mtime=$(stat -f %m "$kubeconfig" 2>/dev/null) || return
+
     if [[ "$current_mtime" != "$_kubectl_config_mtime" ]]; then
-        # Update cache
-        _kubectl_context_cache=$(kubectl config current-context 2>/dev/null)
+        # Update cache with error handling
+        _kubectl_context_cache=$(kubectl config current-context 2>/dev/null) || _kubectl_context_cache=""
         _kubectl_config_mtime=$current_mtime
     fi
 
     if [[ -n "$_kubectl_context_cache" ]]; then
-        echo "%F{$PROMPT_COLOR_KUBECTL}${PROMPT_SYMBOL_KUBECTL} %f%F{$PROMPT_COLOR_KUBECTL}$_kubectl_context_cache%f "
+        echo "%F{${PROMPT_COLOR_KUBECTL:-134}}${PROMPT_SYMBOL_KUBECTL:-☸} %f%F{${PROMPT_COLOR_KUBECTL:-134}}$_kubectl_context_cache%f " 2>/dev/null || echo "${PROMPT_SYMBOL_KUBECTL:-☸} $_kubectl_context_cache "
     fi
 }
 
 # Function to show command status (success/error indicator only, no exit code)
 prompt_exit_code() {
-    echo "%(?.%F{$PROMPT_COLOR_SUCCESS}${PROMPT_SYMBOL_SUCCESS}%f.%F{$PROMPT_COLOR_ERROR}${PROMPT_SYMBOL_ERROR}%f)"
+    echo "%(?.%F{${PROMPT_COLOR_SUCCESS:-70}}${PROMPT_SYMBOL_SUCCESS:-✓}%f.%F{${PROMPT_COLOR_ERROR:-160}}${PROMPT_SYMBOL_ERROR:-✗}%f)"
 }
 
 # Left prompt (main prompt) - Single line, no user@host
-PROMPT='%F{$PROMPT_COLOR_DIR}%~%f$(prompt_gitstatus) $(prompt_exit_code) %F{$PROMPT_COLOR_ARROW}${PROMPT_SYMBOL_ARROW}%f '
+# Try gitstatus first, fall back to vcs_info if not available
+_prompt_git_info() {
+    if command -v gitstatus_query &>/dev/null; then
+        prompt_gitstatus
+    else
+        prompt_git_fallback
+    fi
+}
+PROMPT='%F{$PROMPT_COLOR_DIR}%~%f$(_prompt_git_info) $(prompt_exit_code) %F{$PROMPT_COLOR_ARROW}${PROMPT_SYMBOL_ARROW}%f '
 
 # Right prompt (optional information)
 RPROMPT='$(prompt_virtualenv)$(prompt_kubectl)'
