@@ -64,6 +64,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
       eval "$(gdircolors -b)"
     fi
     alias ls="gls --color=auto --group-directories-first"
+    # shellcheck disable=SC2296
     zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
   fi
 

@@ -5,18 +5,21 @@
 _load_bashcompinit() {
     autoload -Uz bashcompinit && bashcompinit
     # Remove this hook after first run
+    # shellcheck disable=SC2206
     precmd_functions=(${precmd_functions:#_load_bashcompinit})
 }
 precmd_functions+=(_load_bashcompinit)
 
 # Zinit completions
 autoload -Uz _zinit
+# shellcheck disable=SC2154
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
 # Completion styling
 zstyle ':completion:*' menu select                          # Select completions with arrow keys
 zstyle ':completion:*' group-name ''                        # Group results by category
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'   # Case insensitive completion
+# shellcheck disable=SC2296
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"     # Colorize completions
 zstyle ':completion:*' special-dirs true                    # Complete . and .. special directories
 zstyle ':completion:*' rehash true                          # Automatically find new executables in path

@@ -101,7 +101,10 @@
       "Bash(tmux:*)",
       "Bash(pbcopy)",
       "Bash(pbpaste)",
-      "Bash(__NEW_LINE__ cd /Users/javiercoscolla/.dotfiles)"
+      "Bash(__NEW_LINE__ cd /Users/javiercoscolla/.dotfiles)",
+      "Bash(shellcheck:*)",
+      "Bash(~/.cache/pre-commit/repo*/py_env-*/bin/shellcheck)",
+      "Bash(--version)"
     ],
     "deny": [],
     "ask": []

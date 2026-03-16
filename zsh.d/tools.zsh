@@ -16,12 +16,15 @@ _asdf_init() {
   fi
 
   if [[ -n "$asdf_path" ]]; then
+    # shellcheck disable=SC1090
     source "$asdf_path" 2>/dev/null || return
     export PATH="$HOME/.asdf/shims:$PATH"
     # Completions
     if [[ -d "$HOMEBREW_PREFIX/opt/asdf/share/zsh/site-functions" ]]; then
+      # shellcheck disable=SC2206
       fpath=($HOMEBREW_PREFIX/opt/asdf/share/zsh/site-functions $fpath)
     elif [[ -d "${ASDF_DIR}/completions" ]]; then
+      # shellcheck disable=SC2206,SC2128
       fpath=(${ASDF_DIR}/completions $fpath)
     fi
   fi
@@ -87,8 +90,11 @@ fi
 if command -v claude &>/dev/null; then
   export CLAUDE_CODE_USE_BEDROCK=1
   export AWS_REGION=us-east-1
-  # export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0'
-  export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0'
+  export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-sonnet-4-6'
+#  export ANTHROPIC_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0'
+  export ANTHROPIC_SMALL_FAST_MODEL='arn:aws:bedrock:us-east-1:REDACTED:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0'
+  export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+  export CLAUDE_CODE_MAX_OUTPUT_TOKENS=64000
 fi
 
 # zoxide - Smarter cd command that learns your habits

@@ -2,7 +2,9 @@
 
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
+# shellcheck disable=SC2034
 SAVEHIST=10000
+# shellcheck disable=SC2034
 HIST_STAMPS="yyyy-mm-dd"
 
 # History options
