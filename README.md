@@ -154,7 +154,13 @@ make kitty
 ├── Makefile                    # Unified installer (main + tools + profile)
 ├── README.md                   # This file - user-facing guide
 ├── CLAUDE.md                   # AI assistant guidance
-├── HISTORY.md                  # Detailed changelog
+├── docs/                       # Per-technology reference docs
+│   ├── zsh.dotfiles.md
+│   ├── tmux.dotfiles.md
+│   ├── neovim.dotfiles.md
+│   ├── kitty.dotfiles.md
+│   ├── makefile.dotfiles.md
+│   └── asdf.dotfiles.md
 ├── zshrc                       # ZSH entry point → ~/.zshrc
 ├── zsh.d/                      # Modular ZSH → ~/.zsh.d/
 │   ├── env.zsh                 # Environment & PATH (Homebrew, locale)
@@ -166,7 +172,8 @@ make kitty
 │   ├── options.zsh             # ZSH options
 │   ├── completion.zsh          # Deferred completions
 │   ├── colors.zsh              # Color configuration
-│   └── kitty.zsh               # Kitty integration
+│   ├── kitty.zsh               # Kitty integration
+│   └── claude.zsh              # Claude Code / AWS Bedrock (untracked)
 ├── nvim/                       # Neovim → ~/.config/nvim
 │   ├── init.lua                # Entry point
 │   ├── lazy-lock.json          # Plugin lockfile
@@ -216,17 +223,14 @@ To change to another theme:
 <details>
 <summary><strong>Customize ZSH Prompt</strong></summary>
 
-The prompt is fully parametrizable with 40+ configuration variables. Copy the example config and customize:
+The prompt is fully parametrizable with `typeset -g PROMPT_*` variables at the top of `zsh.d/prompt.zsh`. Edit them directly:
 
 ```bash
-cp ~/.zsh.d/prompt.config.example ~/.zsh.d/prompt.config
-vim ~/.zsh.d/prompt.config  # Edit colors, symbols, visibility
+vim ~/.zsh.d/prompt.zsh  # Edit PROMPT_COLOR_*, PROMPT_SHOW_* variables
 source ~/.zshrc
 ```
 
-**Included presets**: Minimal, Nord, Dracula, Gruvbox, Solarized
-
-See [zsh.d/prompt.config.example](zsh.d/prompt.config.example) for full documentation.
+See [docs/zsh.dotfiles.md](docs/zsh.dotfiles.md) for the full variable reference.
 </details>
 
 <details>
@@ -432,6 +436,12 @@ time zsh -i -c exit
 |:---------|:--------|
 | **[README.md](README.md)** | This file - complete guide for macOS setup |
 | **[CLAUDE.md](CLAUDE.md)** | AI assistant guidance & development patterns |
+| **[docs/zsh.dotfiles.md](docs/zsh.dotfiles.md)** | ZSH loading order, plugins, prompt system, aliases |
+| **[docs/tmux.dotfiles.md](docs/tmux.dotfiles.md)** | Tmux key bindings, clipboard, Neovim integration |
+| **[docs/neovim.dotfiles.md](docs/neovim.dotfiles.md)** | Plugin list, LSP servers, key bindings |
+| **[docs/kitty.dotfiles.md](docs/kitty.dotfiles.md)** | Kitty settings, shortcuts, transparency |
+| **[docs/makefile.dotfiles.md](docs/makefile.dotfiles.md)** | All Makefile targets reference |
+| **[docs/asdf.dotfiles.md](docs/asdf.dotfiles.md)** | ASDF version manager, managed tools |
 | **[Makefile](Makefile)** | Complete installation automation |
 
 ---
