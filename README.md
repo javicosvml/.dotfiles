@@ -4,9 +4,9 @@
 
 # ~/.dotfiles
 
-**My personal macOS development environment**
+My personal macOS development environment
 
-*Meticulously crafted configuration for a productive and beautiful terminal experience*
+Meticulously crafted configuration for a productive and beautiful terminal experience
 
 [![macOS](https://img.shields.io/badge/macOS-Ventura%2B-black?style=flat-square&logo=apple&logoColor=white)](https://www.apple.com/macos/)
 [![Shell](https://img.shields.io/badge/Shell-ZSH-green?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.zsh.org/)
@@ -15,11 +15,11 @@
 
 <br>
 
-[Features](#-features) •
-[Installation](#-installation) •
-[What's Included](#-whats-included) •
-[Documentation](#-documentation) •
-[Customization](#-customization)
+[Features](#features) •
+[Installation](#installation) •
+[What's Included](#whats-included) •
+[Documentation](#documentation) •
+[Customization](#customization)
 
 <br>
 
@@ -139,13 +139,13 @@ make kitty
 
 | Component | Tool | Description |
 |:---------:|:----:|:------------|
-| <img src="https://www.vectorlogo.zone/logos/gnu_bash/gnu_bash-icon.svg" width="20"> | **[ZSH](https://www.zsh.org/)** | Shell with [Zinit](https://github.com/zdharma-continuum/zinit) plugins |
-| <img src="https://raw.githubusercontent.com/romkatv/powerlevel10k-media/master/prompt-styles-high-contrast.png" width="20"> | **[gitstatus](https://github.com/romkatv/gitstatus)** | Ultra-fast parametrizable prompt (~47ms) |
-| <img src="https://sw.kovidgoyal.net/kitty/_static/kitty.svg" width="20"> | **[Kitty](https://sw.kovidgoyal.net/kitty/)** | GPU-accelerated terminal |
-| <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Tmux_logo.svg" width="20"> | **[Tmux](https://github.com/tmux/tmux)** | Terminal multiplexer |
-| <img src="https://www.vectorlogo.zone/logos/neovimio/neovimio-icon.svg" width="20"> | **[Neovim](https://neovim.io/)** | Modern Vim with LSP |
-| <img src="https://avatars.githubusercontent.com/u/42918198" width="20"> | **[ASDF](https://asdf-vm.com/)** | Version manager for everything |
-| <img src="https://brew.sh/assets/img/homebrew-256x256.png" width="20"> | **[Homebrew](https://brew.sh/)** | macOS package manager |
+| <img src="https://www.vectorlogo.zone/logos/gnu_bash/gnu_bash-icon.svg" width="20" alt="ZSH"> | **[ZSH](https://www.zsh.org/)** | Shell with [Zinit](https://github.com/zdharma-continuum/zinit) plugins |
+| <img src="https://raw.githubusercontent.com/romkatv/powerlevel10k-media/master/prompt-styles-high-contrast.png" width="20" alt="gitstatus"> | **[gitstatus](https://github.com/romkatv/gitstatus)** | Ultra-fast parametrizable prompt (~47ms) |
+| <img src="https://sw.kovidgoyal.net/kitty/_static/kitty.svg" width="20" alt="Kitty"> | **[Kitty](https://sw.kovidgoyal.net/kitty/)** | GPU-accelerated terminal |
+| <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Tmux_logo.svg" width="20" alt="Tmux"> | **[Tmux](https://github.com/tmux/tmux)** | Terminal multiplexer |
+| <img src="https://www.vectorlogo.zone/logos/neovimio/neovimio-icon.svg" width="20" alt="Neovim"> | **[Neovim](https://neovim.io/)** | Modern Vim with LSP |
+| <img src="https://avatars.githubusercontent.com/u/42918198" width="20" alt="ASDF"> | **[ASDF](https://asdf-vm.com/)** | Version manager for everything |
+| <img src="https://brew.sh/assets/img/homebrew-256x256.png" width="20" alt="Homebrew"> | **[Homebrew](https://brew.sh/)** | macOS package manager |
 
 ### Repository Structure
 
@@ -154,7 +154,13 @@ make kitty
 ├── Makefile                    # Unified installer (main + tools + profile)
 ├── README.md                   # This file - user-facing guide
 ├── CLAUDE.md                   # AI assistant guidance
-├── HISTORY.md                  # Detailed changelog
+├── docs/                       # Per-technology reference docs
+│   ├── zsh.dotfiles.md
+│   ├── tmux.dotfiles.md
+│   ├── neovim.dotfiles.md
+│   ├── kitty.dotfiles.md
+│   ├── makefile.dotfiles.md
+│   └── asdf.dotfiles.md
 ├── zshrc                       # ZSH entry point → ~/.zshrc
 ├── zsh.d/                      # Modular ZSH → ~/.zsh.d/
 │   ├── env.zsh                 # Environment & PATH (Homebrew, locale)
@@ -166,7 +172,8 @@ make kitty
 │   ├── options.zsh             # ZSH options
 │   ├── completion.zsh          # Deferred completions
 │   ├── colors.zsh              # Color configuration
-│   └── kitty.zsh               # Kitty integration
+│   ├── kitty.zsh               # Kitty integration
+│   └── claude.zsh              # Claude Code / AWS Bedrock (untracked)
 ├── nvim/                       # Neovim → ~/.config/nvim
 │   ├── init.lua                # Entry point
 │   ├── lazy-lock.json          # Plugin lockfile
@@ -216,17 +223,14 @@ To change to another theme:
 <details>
 <summary><strong>Customize ZSH Prompt</strong></summary>
 
-The prompt is fully parametrizable with 40+ configuration variables. Copy the example config and customize:
+The prompt is fully parametrizable with `typeset -g PROMPT_*` variables at the top of `zsh.d/prompt.zsh`. Edit them directly:
 
 ```bash
-cp ~/.zsh.d/prompt.config.example ~/.zsh.d/prompt.config
-vim ~/.zsh.d/prompt.config  # Edit colors, symbols, visibility
+vim ~/.zsh.d/prompt.zsh  # Edit PROMPT_COLOR_*, PROMPT_SHOW_* variables
 source ~/.zshrc
 ```
 
-**Included presets**: Minimal, Nord, Dracula, Gruvbox, Solarized
-
-See [zsh.d/prompt.config.example](zsh.d/prompt.config.example) for full documentation.
+See [docs/zsh.dotfiles.md](docs/zsh.dotfiles.md) for the full variable reference.
 </details>
 
 <details>
@@ -284,6 +288,39 @@ Edit `kitty.conf` and modify the color scheme section:
 <summary><strong>Modify Tmux Configuration</strong></summary>
 
 Edit `tmux.conf` directly to customize your tmux setup.
+</details>
+
+<details>
+<summary><strong>Clipboard (Tmux Copy Mode)</strong></summary>
+
+Uses native `pbcopy`/`pbpaste` — no external plugins.
+
+**Enter/exit copy mode:** `Ctrl+b [` / `q` or `Escape`
+
+**In copy-mode (vi keys):**
+- `Space` — begin selection
+- `y` / `Enter` — copy selection to clipboard and exit
+- `v` — toggle character/line selection
+- `Ctrl+v` — rectangle selection
+
+**Mouse (normal mode):**
+- Drag / double-click / triple-click → copies to clipboard automatically
+- Right-click → paste from system clipboard
+
+| Action | Shortcut |
+|--------|----------|
+| Enter copy mode | `Ctrl+b [` |
+| Copy selection | `y` (copy-mode) |
+| Paste from buffer | `Ctrl+b ]` |
+| Paste from clipboard | Right-click |
+| Select all | `0` then `G` (copy-mode) |
+
+**Troubleshoot:**
+```bash
+tmux list-keys -T copy-mode-vi | grep "y send"  # verify y binding
+tmux show -g mouse                               # verify mouse on
+bash scripts/validate-configs.sh                 # full validation
+```
 </details>
 
 ---
@@ -397,10 +434,15 @@ time zsh -i -c exit
 
 | Document | Purpose |
 |:---------|:--------|
-| **[README.md](README.md)** | This file - user-facing setup guide for macOS |
+| **[README.md](README.md)** | This file - complete guide for macOS setup |
 | **[CLAUDE.md](CLAUDE.md)** | AI assistant guidance & development patterns |
-| **[HISTORY.md](HISTORY.md)** | Detailed changelog with technical specifics |
-| **[Makefile](Makefile)** | Complete installation automation (410+ lines) |
+| **[docs/zsh.dotfiles.md](docs/zsh.dotfiles.md)** | ZSH loading order, plugins, prompt system, aliases |
+| **[docs/tmux.dotfiles.md](docs/tmux.dotfiles.md)** | Tmux key bindings, clipboard, Neovim integration |
+| **[docs/neovim.dotfiles.md](docs/neovim.dotfiles.md)** | Plugin list, LSP servers, key bindings |
+| **[docs/kitty.dotfiles.md](docs/kitty.dotfiles.md)** | Kitty settings, shortcuts, transparency |
+| **[docs/makefile.dotfiles.md](docs/makefile.dotfiles.md)** | All Makefile targets reference |
+| **[docs/asdf.dotfiles.md](docs/asdf.dotfiles.md)** | ASDF version manager, managed tools |
+| **[Makefile](Makefile)** | Complete installation automation |
 
 ---
 

@@ -21,11 +21,11 @@ print_status() {
   case $status in
     error)
       echo -e "${RED}✗ ERROR${NC}: $message"
-      ((ERRORS++))
+      (( ERRORS += 1 ))
       ;;
     warn)
       echo -e "${YELLOW}⚠ WARN${NC}: $message"
-      ((WARNINGS++))
+      (( WARNINGS += 1 ))
       ;;
     ok)
       echo -e "${GREEN}✓ OK${NC}: $message"
