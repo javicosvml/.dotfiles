@@ -1,0 +1,17 @@
+# Markdownlint configuration
+default: true
+
+# Allow long lines in code blocks and tables
+MD013:
+  line_length: 120
+  code_blocks: false
+  tables: false
+
+# Allow multiple H1 headings (common in dotfile docs)
+MD025: false
+
+# Allow inline HTML (used in README badges)
+MD033: false
+
+# Allow emphasis as heading replacement in some contexts
+MD036: false
