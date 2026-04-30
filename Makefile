@@ -1,6 +1,5 @@
 # Makefile for dotfiles installation on macOS
-# Consolidated: main installation, tools, and profile configuration
-# Uses Homebrew for package management and ASDF v0.18.0+ for development tools
+# Uses Homebrew for package management and mise for development tool versions
 
 # =============================================================================
 # Make Configuration
@@ -15,9 +14,9 @@ MAKEFLAGS += --no-builtin-rules
 # =============================================================================
 # Phony Targets
 # =============================================================================
-.PHONY: help all verify check-xcode brew asdf kitty clean
+.PHONY: help all verify check-xcode brew mise kitty clean
 .PHONY: profile zsh neovim tmux git install-tpm
-.PHONY: tools brew-tools nodejs nodejs-update golang ruby terraform
+.PHONY: tools brew-tools nodejs golang ruby terraform
 .PHONY: kubernetes kubectl helm kind kubectx
 .PHONY: docker aws gcloud azure
 .PHONY: list update
@@ -30,72 +29,27 @@ MAKEFLAGS += --no-builtin-rules
 # =============================================================================
 # Variables
 # =============================================================================
-# Colors
-BOLD := $(shell tput bold)
-RED := $(shell tput setaf 1)
-GREEN := $(shell tput setaf 2)
+BOLD   := $(shell tput bold)
+RED    := $(shell tput setaf 1)
+GREEN  := $(shell tput setaf 2)
 YELLOW := $(shell tput setaf 3)
-RESET := $(shell tput sgr0)
+RESET  := $(shell tput sgr0)
 
-# Paths
-DOTFILES := $(HOME)/.dotfiles
+DOTFILES   := $(HOME)/.dotfiles
 CONFIG_DIR := $(HOME)/.config
 KITTY_CONFIG := $(CONFIG_DIR)/kitty
 
-# System info
 OS := $(shell uname -s)
-
-# ASDF check
-ASDF_EXISTS := $(shell command -v asdf 2>/dev/null)
-ASDF_VERSION := $(shell asdf version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
 
 # =============================================================================
 # Helper Functions
 # =============================================================================
-# Check ASDF availability
-define check_asdf
-	@if [ -z "$(ASDF_EXISTS)" ]; then \
-		echo "$(RED)✗ ASDF not found. Install with: make asdf$(RESET)"; \
-		exit 1; \
-	fi
-endef
-
-# Generic plugin installation function
-define install_plugin
-	@if ! asdf plugin list 2>/dev/null | grep -q "^$(1)$$"; then \
-		echo "$(YELLOW)Adding $(1) plugin...$(RESET)"; \
-		if [ -n "$(strip $(2))" ]; then \
-			asdf plugin add $(1) $(2) 2>/dev/null || { echo "$(RED)✗ Failed to add $(1) plugin$(RESET)"; exit 1; }; \
-		else \
-			asdf plugin add $(1) 2>/dev/null || { echo "$(RED)✗ Failed to add $(1) plugin$(RESET)"; exit 1; }; \
-		fi; \
-	fi
-endef
-
-# Generic tool installation function
-define install_tool
-	$(call check_asdf)
-	$(call install_plugin,$(1),$(or $(2),))
-	@echo "$(YELLOW)Installing $(1)...$(RESET)"; \
-	LATEST=$$(asdf latest $(1) 2>/dev/null); \
-	if [ -z "$$LATEST" ]; then \
-		echo "$(RED)✗ Could not determine latest $(1) version$(RESET)"; \
-		exit 1; \
-	fi; \
-	if asdf list $(1) 2>/dev/null | grep -q "$$LATEST"; then \
-		echo "$(GREEN)✓ $(1) $$LATEST already installed$(RESET)"; \
-	else \
-		echo "  Installing version $$LATEST..."; \
-		if asdf install $(1) $$LATEST; then \
-			echo "$(GREEN)✓ $(1) $$LATEST installed$(RESET)"; \
-		else \
-			echo "$(RED)✗ Installation failed for $(1) $$LATEST$(RESET)"; \
-			exit 1; \
-		fi; \
-	fi; \
-	echo "  Setting $(1) $$LATEST as default..."; \
-	asdf set --home $(1) $$LATEST; \
-	asdf reshim $(1) 2>/dev/null
+# Install a tool via mise (latest version, set as global)
+define install_mise_tool
+	@echo "$(YELLOW)Installing $(1)...$(RESET)"
+	@mise use --global $(1)@latest 2>&1 \
+		&& echo "$(GREEN)✓ $(1) installed$(RESET)" \
+		|| { echo "$(RED)✗ Failed to install $(1)$(RESET)"; exit 1; }
 endef
 
 # =============================================================================
@@ -106,7 +60,7 @@ help: ## Show this help message
 	@echo "$(BOLD)Dotfiles Makefile - macOS$(RESET)"
 	@echo ""
 	@echo "$(BOLD)Main Targets:$(RESET)"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -E '^(all|verify|brew|asdf|kitty|profile|tools|clean):' | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)  %-28s$(RESET) %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -E '^(all|verify|brew|mise|kitty|profile|tools|clean):' | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)  %-28s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(BOLD)Profile Targets:$(RESET)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -E '^(zsh|neovim|tmux|git):' | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)  %-28s$(RESET) %s\n", $$1, $$2}'
@@ -127,7 +81,7 @@ check-xcode: ## Verify Xcode Command Line Tools are installed
 		echo "$(YELLOW)A dialog will appear - please click Install$(RESET)"; \
 		xcode-select --install; \
 		echo ""; \
-		echo "$(YELLOW)⚠ Please complete the installation and run 'make' again$(RESET)"; \
+		echo "$(YELLOW)Please complete the installation and run 'make' again$(RESET)"; \
 		exit 1; \
 	else \
 		echo "$(GREEN)✓ Xcode Command Line Tools installed at $$(xcode-select -p)$(RESET)"; \
@@ -166,17 +120,17 @@ verify: check-xcode ## Verify all system dependencies
 	else \
 		echo "$(YELLOW)✗$(RESET) Neovim: Not installed (run: make brew-tools)"; \
 	fi
-	@if command -v asdf &>/dev/null; then \
-		echo "$(GREEN)✓$(RESET) ASDF: $$(asdf --version | head -1)"; \
+	@if command -v mise &>/dev/null; then \
+		echo "$(GREEN)✓$(RESET) mise: $$(mise --version)"; \
 	else \
-		echo "$(YELLOW)✗$(RESET) ASDF: Not installed (run: make asdf)"; \
+		echo "$(YELLOW)✗$(RESET) mise: Not installed (run: make mise)"; \
 	fi
 	@echo ""
 
 # =============================================================================
 # Main Installation Targets
 # =============================================================================
-all: check-xcode brew asdf profile tools kitty ## Install all components (full setup)
+all: check-xcode brew mise profile tools kitty ## Install all components (full setup)
 	@echo ""
 	@echo "$(GREEN)$(BOLD)✓ Full installation complete!$(RESET)"
 	@echo ""
@@ -206,41 +160,21 @@ brew: check-xcode ## Install Homebrew package manager
 		echo "Version: $$(brew --version | head -n 1)"; \
 	fi
 
-asdf: brew ## Install ASDF version manager (v0.18.0+ from Homebrew)
-	@echo "$(BOLD)Installing ASDF version manager...$(RESET)"
-	@if ! brew list asdf >/dev/null 2>&1; then \
-		echo "$(YELLOW)Installing ASDF via Homebrew...$(RESET)"; \
-		brew install asdf; \
-		ASDF_VERSION=$$(brew list --versions asdf | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'); \
-		echo ""; \
-		echo "$(BOLD)Configuring ASDF for ZSH...$(RESET)"; \
-		if [ -f "$(HOME)/.zshrc" ]; then \
-			if ! grep -q "asdf.sh" "$(HOME)/.zshrc"; then \
-				echo "" >> $(HOME)/.zshrc; \
-				echo "# ASDF Version Manager (v$$ASDF_VERSION - managed by Homebrew)" >> $(HOME)/.zshrc; \
-				echo ". $$(brew --prefix asdf)/libexec/asdf.sh" >> $(HOME)/.zshrc; \
-				echo "fpath=($$(brew --prefix asdf)/share/zsh/site-functions \$$fpath)" >> $(HOME)/.zshrc; \
-				echo "$(GREEN)✓ ASDF configuration added to .zshrc$(RESET)"; \
-			else \
-				echo "$(GREEN)✓ ASDF already configured in .zshrc$(RESET)"; \
-			fi; \
-		fi; \
-		echo "$(GREEN)✓ ASDF v$$ASDF_VERSION installed successfully!$(RESET)"; \
-		echo ""; \
-		echo "$(YELLOW)To activate ASDF now, run:$(RESET)"; \
-		echo "  source ~/.zshrc"; \
+mise: brew ## Install mise version manager
+	@echo "$(BOLD)Installing mise...$(RESET)"
+	@if ! brew list mise >/dev/null 2>&1; then \
+		echo "$(YELLOW)Installing mise via Homebrew...$(RESET)"; \
+		brew install mise; \
+		echo "$(GREEN)✓ mise installed$(RESET)"; \
 	else \
-		ASDF_VERSION=$$(brew list --versions asdf | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'); \
-		echo "$(GREEN)✓ ASDF v$$ASDF_VERSION already installed$(RESET)"; \
-		echo "Location: $$(brew --prefix asdf)"; \
+		echo "$(GREEN)✓ mise already installed: $$(mise --version)$(RESET)"; \
 	fi
 	@echo ""
-	@echo "$(BOLD)Verifying ASDF installation...$(RESET)"
-	@if command -v asdf >/dev/null 2>&1; then \
-		echo "$(GREEN)✓ ASDF is active: $$(asdf --version | head -1)$(RESET)"; \
+	@echo "$(BOLD)Activating mise...$(RESET)"
+	@if command -v mise &>/dev/null; then \
+		echo "$(GREEN)✓ mise active: $$(mise --version)$(RESET)"; \
 	else \
-		echo "$(YELLOW)⚠ ASDF installed but not yet in PATH$(RESET)"; \
-		echo "  Run: source ~/.zshrc"; \
+		echo "$(YELLOW)mise installed but not yet in PATH. Run: source ~/.zshrc$(RESET)"; \
 	fi
 
 kitty: brew ## Install Kitty terminal emulator and configuration
@@ -273,7 +207,7 @@ kitty: brew ## Install Kitty terminal emulator and configuration
 	fi
 	@ln -sf $(DOTFILES)/kitty.conf $(KITTY_CONFIG)/kitty.conf
 	@echo "$(GREEN)✓ Kitty configuration linked$(RESET)"
-	@echo "  ~/.config/kitty/kitty.conf → $(DOTFILES)/kitty.conf"
+	@echo "  ~/.config/kitty/kitty.conf -> $(DOTFILES)/kitty.conf"
 	@echo ""
 	@echo "$(GREEN)$(BOLD)✓ Kitty setup complete!$(RESET)"
 
@@ -300,7 +234,7 @@ profile: zsh neovim tmux git ## Install all profile configurations (ZSH, Neovim,
 	@echo "  2. Run 'nvim' to install plugins automatically"
 	@echo ""
 
-zsh: ## Install ZSH configuration (Zinit + Powerlevel10k)
+zsh: ## Install ZSH configuration (Zinit + modules)
 	@echo "$(BOLD)Installing ZSH configuration...$(RESET)"
 	@if [ ! -f "$(DOTFILES)/zshrc" ]; then \
 		echo "$(RED)✗ zshrc not found at $(DOTFILES)/zshrc$(RESET)"; \
@@ -321,13 +255,13 @@ zsh: ## Install ZSH configuration (Zinit + Powerlevel10k)
 	@ln -sf $(DOTFILES)/zshrc $(HOME)/.zshrc
 	@ln -sf $(DOTFILES)/zsh.d $(HOME)/.zsh.d
 	@echo "$(GREEN)✓ ZSH configuration installed$(RESET)"
-	@echo "  ~/.zshrc → $(DOTFILES)/zshrc"
-	@echo "  ~/.zsh.d → $(DOTFILES)/zsh.d"
+	@echo "  ~/.zshrc  -> $(DOTFILES)/zshrc"
+	@echo "  ~/.zsh.d  -> $(DOTFILES)/zsh.d"
 
 neovim: ## Install Neovim configuration (lazy.nvim + LSP)
 	@echo "$(BOLD)Installing Neovim configuration...$(RESET)"
 	@if ! command -v nvim &>/dev/null; then \
-		echo "$(RED)✗ Neovim not found. Installing via Homebrew...$(RESET)"; \
+		echo "$(YELLOW)Neovim not found. Installing via Homebrew...$(RESET)"; \
 		brew install neovim; \
 	fi
 	@if [ ! -d "$(DOTFILES)/nvim" ]; then \
@@ -342,7 +276,7 @@ neovim: ## Install Neovim configuration (lazy.nvim + LSP)
 	@rm -rf $(CONFIG_DIR)/nvim
 	@ln -sf $(DOTFILES)/nvim $(CONFIG_DIR)/nvim
 	@echo "$(GREEN)✓ Neovim configuration installed$(RESET)"
-	@echo "  ~/.config/nvim → $(DOTFILES)/nvim"
+	@echo "  ~/.config/nvim -> $(DOTFILES)/nvim"
 	@echo "$(YELLOW)  Run 'nvim' to install plugins automatically$(RESET)"
 
 install-tpm: ## Install Tmux Plugin Manager (TPM)
@@ -351,15 +285,15 @@ install-tpm: ## Install Tmux Plugin Manager (TPM)
 		echo "$(YELLOW)Cloning TPM repository...$(RESET)"; \
 		git clone https://github.com/tmux-plugins/tpm $(HOME)/.tmux/plugins/tpm; \
 		echo "$(GREEN)✓ TPM installed at ~/.tmux/plugins/tpm$(RESET)"; \
-		echo "$(YELLOW)  Note: Open tmux and press prefix + I to install plugins$(RESET)"; \
+		echo "$(YELLOW)  Open tmux and press prefix + I to install plugins$(RESET)"; \
 	else \
 		echo "$(GREEN)✓ TPM already installed$(RESET)"; \
 	fi
 
-tmux: install-tpm ## Install Tmux configuration (gpakosz/.tmux base)
+tmux: install-tpm ## Install Tmux configuration
 	@echo "$(BOLD)Installing Tmux configuration...$(RESET)"
 	@if ! command -v tmux &>/dev/null; then \
-		echo "$(RED)✗ Tmux not found. Installing via Homebrew...$(RESET)"; \
+		echo "$(YELLOW)Tmux not found. Installing via Homebrew...$(RESET)"; \
 		brew install tmux; \
 	fi
 	@if [ ! -f "$(DOTFILES)/tmux.conf" ]; then \
@@ -372,7 +306,7 @@ tmux: install-tpm ## Install Tmux configuration (gpakosz/.tmux base)
 	fi
 	@ln -sf $(DOTFILES)/tmux.conf $(HOME)/.tmux.conf
 	@echo "$(GREEN)✓ Tmux configuration installed$(RESET)"
-	@echo "  ~/.tmux.conf → $(DOTFILES)/tmux.conf"
+	@echo "  ~/.tmux.conf -> $(DOTFILES)/tmux.conf"
 	@echo "$(YELLOW)  To install plugins: open tmux and press Ctrl+A then I$(RESET)"
 
 git: ## Install Git configuration (gitignore_global)
@@ -382,24 +316,23 @@ git: ## Install Git configuration (gitignore_global)
 		exit 1; \
 	fi
 	@if [ -f "$(HOME)/.gitignore_global" ] && [ ! -L "$(HOME)/.gitignore_global" ]; then \
-		echo "$(YELLOW)Backing up existing .gitignore_global to .gitignore_global.backup$(RESET)"; \
+		echo "$(YELLOW)Backing up existing .gitignore_global$(RESET)"; \
 		mv $(HOME)/.gitignore_global $(HOME)/.gitignore_global.backup; \
 	fi
 	@ln -sf $(DOTFILES)/gitignore_global $(HOME)/.gitignore_global
 	@git config --global core.excludesfile $(HOME)/.gitignore_global 2>/dev/null || true
 	@echo "$(GREEN)✓ Git configuration installed$(RESET)"
-	@echo "  ~/.gitignore_global → $(DOTFILES)/gitignore_global"
-	@echo "$(YELLOW)  Note: Set your name/email in ~/.gitconfig.local if needed$(RESET)"
+	@echo "  ~/.gitignore_global -> $(DOTFILES)/gitignore_global"
 
 # =============================================================================
-# Development Tools Targets (ASDF + Homebrew)
+# Development Tools Targets (mise + Homebrew)
 # =============================================================================
 tools: brew-tools nodejs golang terraform kubernetes ## Install essential development tools
 	@echo ""
 	@echo "$(GREEN)$(BOLD)✓ Essential development tools installed!$(RESET)"
 	@echo ""
 	@echo "$(YELLOW)Installed tools:$(RESET)"
-	@asdf current 2>/dev/null | tail -n +2 | awk '{if($$2!="______") printf "  • %-12s %s\n", $$1, $$2}' || echo "  No ASDF tools installed yet"
+	@mise ls 2>/dev/null | awk '{printf "  %-16s %s\n", $$1, $$2}' || echo "  No mise tools installed yet"
 	@echo ""
 
 brew-tools: ## Install essential CLI tools via Homebrew
@@ -427,94 +360,49 @@ brew-tools: ## Install essential CLI tools via Homebrew
 	@echo ""
 	@echo "$(GREEN)✓ All essential tools installed$(RESET)"
 
-nodejs: ## Install Node.js (latest LTS - even version numbers: 20, 22, 24, etc.)
-	$(call check_asdf)
-	$(call install_plugin,nodejs,)
-	@echo "$(YELLOW)Installing Node.js LTS (latest)...$(RESET)"
-	@echo "$(BLUE)ℹ Node.js LTS versions use even major numbers (20, 22, 24, etc.)$(RESET)"
-	@echo ""
-	@LATEST_LTS=$$(asdf list all nodejs 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$$' | while read v; do MAJOR=$$(echo $$v | cut -d. -f1); if (( $$MAJOR % 2 == 0 )); then echo $$v; fi; done | sort -V | tail -1); \
-	if [ -z "$$LATEST_LTS" ]; then \
-		echo "$(RED)✗ Could not determine latest Node.js LTS version$(RESET)"; \
-		exit 1; \
-	fi; \
-	echo "  Latest LTS version: $$LATEST_LTS"; \
-	if asdf list nodejs 2>/dev/null | grep -q "$$LATEST_LTS"; then \
-		echo "$(GREEN)✓$(RESET) Node.js $$LATEST_LTS already installed"; \
-	else \
-		echo "  Installing Node.js $$LATEST_LTS..."; \
-		if asdf install nodejs $$LATEST_LTS 2>&1; then \
-			echo "$(GREEN)✓$(RESET) Node.js $$LATEST_LTS installed"; \
-		else \
-			echo "$(RED)✗ Installation failed for Node.js $$LATEST_LTS$(RESET)"; \
-			exit 1; \
-		fi; \
-	fi; \
-	echo "  Setting Node.js $$LATEST_LTS as default..."; \
-	asdf set --home nodejs $$LATEST_LTS; \
-	asdf reshim nodejs 2>/dev/null || true; \
-	echo "$(GREEN)✓ Node.js $$LATEST_LTS is now the global version$(RESET)"; \
-	echo ""; \
-	echo "$(BLUE)Node.js Release Schedule:$(RESET)"; \
-	echo "  • v20: Active until 2026-04-30"; \
-	echo "  • v22: Active until 2027-04-30"; \
-	echo "  • v24: Active until 2028-04-30"; \
-	echo "  • v26: Expected October 2025"
+nodejs: ## Install Node.js LTS (latest even-numbered version)
+	@echo "$(YELLOW)Installing Node.js LTS...$(RESET)"
+	@mise use --global node@lts 2>&1 \
+		&& echo "$(GREEN)✓ Node.js $$(node --version 2>/dev/null || mise exec node -- node --version) installed$(RESET)" \
+		|| { echo "$(RED)✗ Failed to install Node.js$(RESET)"; exit 1; }
 
-nodejs-update: ## Check and update Node.js to latest LTS if newer version available
-	$(call check_asdf)
-	@echo "$(YELLOW)Checking for Node.js LTS updates...$(RESET)"
-	@CURRENT_VERSION=$$(asdf current nodejs 2>/dev/null | grep -E '^nodejs' | awk '{print $$2}'); \
-	if [ -z "$$CURRENT_VERSION" ] || [ "$$CURRENT_VERSION" = "______" ]; then \
-		echo "$(YELLOW)⚠ No global Node.js version set. Run 'make nodejs' first.$(RESET)"; \
-		exit 1; \
-	fi; \
-	echo "  Current version: $$CURRENT_VERSION"; \
-	echo ""; \
-	LATEST_LTS=$$(asdf list all nodejs 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$$' | while read v; do MAJOR=$$(echo $$v | cut -d. -f1); if (( $$MAJOR % 2 == 0 )); then echo $$v; fi; done | sort -V | tail -1); \
-	echo "  Latest LTS:     $$LATEST_LTS"; \
-	echo ""; \
-	if [ "$$CURRENT_VERSION" = "$$LATEST_LTS" ]; then \
-		echo "$(GREEN)✓ Already running latest LTS version$(RESET)"; \
-		exit 0; \
-	fi; \
-	echo "$(YELLOW)Newer LTS version available. Installing...$(RESET)"; \
-	if asdf list nodejs 2>/dev/null | grep -q "$$LATEST_LTS"; then \
-		echo "$(GREEN)✓$(RESET) Node.js $$LATEST_LTS already installed"; \
+nodejs-update: ## Update Node.js to latest LTS
+	@echo "$(YELLOW)Updating Node.js to latest LTS...$(RESET)"
+	@CURRENT=$$(mise current node 2>/dev/null || echo "none"); \
+	mise upgrade node 2>&1; \
+	NEW=$$(mise current node 2>/dev/null || echo "unknown"); \
+	if [ "$$CURRENT" = "$$NEW" ]; then \
+		echo "$(GREEN)✓ Node.js $$NEW is already the latest$(RESET)"; \
 	else \
-		echo "  Downloading Node.js $$LATEST_LTS..."; \
-		asdf install nodejs $$LATEST_LTS 2>&1 || { echo "$(RED)✗ Installation failed$(RESET)"; exit 1; }; \
-		echo "$(GREEN)✓$(RESET) Node.js $$LATEST_LTS installed"; \
-	fi; \
-	echo ""; \
-	echo "  Setting Node.js $$LATEST_LTS as default..."; \
-	asdf set --home nodejs $$LATEST_LTS; \
-	asdf reshim nodejs 2>/dev/null || true; \
-	echo ""; \
-	echo "$(GREEN)✓ Updated from $$CURRENT_VERSION to $$LATEST_LTS$(RESET)"; \
-	echo ""; \
-	node --version
+		echo "$(GREEN)✓ Updated Node.js: $$CURRENT -> $$NEW$(RESET)"; \
+	fi
 
 golang: ## Install Go (latest stable)
-	$(call install_tool,golang,)
+	$(call install_mise_tool,go)
 
 ruby: ## Install Ruby (latest stable)
-	$(call install_tool,ruby,)
+	$(call install_mise_tool,ruby)
 
 terraform: ## Install Terraform (latest stable)
-	$(call install_tool,terraform,)
+	$(call install_mise_tool,terraform)
 
 kubectl: ## Install kubectl (latest stable)
-	$(call install_tool,kubectl,)
+	$(call install_mise_tool,kubectl)
 
 helm: ## Install Helm (latest stable)
-	$(call install_tool,helm,)
+	$(call install_mise_tool,helm)
 
 kind: ## Install kind - Kubernetes in Docker
-	$(call install_tool,kind,https://github.com/reegnz/asdf-kind.git)
+	$(call install_mise_tool,kind)
 
-kubectx: ## Install kubectx/kubens
-	$(call install_tool,kubectx,https://github.com/virtualstaticvoid/asdf-kubectx.git)
+kubectx: ## Install kubectx/kubens via Homebrew
+	@echo "$(YELLOW)Installing kubectx...$(RESET)"
+	@if brew list kubectx &>/dev/null; then \
+		echo "$(GREEN)✓ kubectx already installed$(RESET)"; \
+	else \
+		brew install kubectx; \
+		echo "$(GREEN)✓ kubectx installed$(RESET)"; \
+	fi
 
 kubernetes: kubectl helm kind kubectx ## Install all Kubernetes tools
 
@@ -528,7 +416,7 @@ docker: ## Install Docker Desktop via Homebrew
 	fi
 
 aws: ## Install AWS CLI
-	$(call install_tool,awscli,)
+	$(call install_mise_tool,awscli)
 
 gcloud: ## Install Google Cloud SDK via Homebrew
 	@echo "$(BOLD)Installing Google Cloud SDK...$(RESET)"
@@ -548,18 +436,16 @@ azure: ## Install Azure CLI via Homebrew
 		echo "$(GREEN)✓ Azure CLI installed$(RESET)"; \
 	fi
 
-list: ## List all installed ASDF tools and versions
-	$(call check_asdf)
-	@echo "$(BOLD)ASDF Version:$(RESET) $(ASDF_VERSION)"
+list: ## List all installed mise tools and versions
+	@echo "$(BOLD)mise version:$(RESET) $$(mise --version)"
 	@echo ""
 	@echo "$(BOLD)Installed Tools:$(RESET)"
-	@asdf current 2>/dev/null || echo "  No tools installed"
+	@mise ls 2>/dev/null || echo "  No tools installed"
 
-update: ## Update ASDF and all plugins
-	$(call check_asdf)
-	@echo "$(BOLD)Updating ASDF...$(RESET)"
-	@brew upgrade asdf 2>/dev/null || echo "$(GREEN)✓ ASDF up to date$(RESET)"
+update: ## Update mise and all managed tools
+	@echo "$(BOLD)Updating mise...$(RESET)"
+	@brew upgrade mise 2>/dev/null || echo "$(GREEN)✓ mise up to date$(RESET)"
 	@echo ""
-	@echo "$(BOLD)Updating plugins...$(RESET)"
-	@asdf plugin update --all 2>&1 || true
+	@echo "$(BOLD)Upgrading all tools...$(RESET)"
+	@mise upgrade 2>&1 || true
 	@echo "$(GREEN)✓ Update complete$(RESET)"

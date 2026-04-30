@@ -43,7 +43,7 @@ source ~/.zshrc
 | Terminal | [Kitty](https://sw.kovidgoyal.net/kitty/) | GPU-accelerated, TokyoNight theme |
 | Multiplexer | [Tmux](https://github.com/tmux/tmux) | Prefix `C-a`, native pbcopy bindings |
 | Editor | [Neovim](https://neovim.io/) + [lazy.nvim](https://github.com/folke/lazy.nvim) | LSP via Mason, Lua config |
-| Versions | [ASDF](https://asdf-vm.com/) | Node.js, Go, Ruby, Terraform |
+| Versions | [mise](https://mise.jdx.dev/) | Node.js, Go, Ruby, Terraform |
 | Packages | [Homebrew](https://brew.sh/) | Everything else |
 
 ---
@@ -134,7 +134,7 @@ Mouse drag, double-click, and triple-click all pipe directly to `pbcopy`.
 | [docs/neovim.dotfiles.md](docs/neovim.dotfiles.md) | Plugin list, LSP servers, key bindings |
 | [docs/kitty.dotfiles.md](docs/kitty.dotfiles.md) | Terminal settings, shortcuts, theme |
 | [docs/makefile.dotfiles.md](docs/makefile.dotfiles.md) | All Makefile targets reference |
-| [docs/asdf.dotfiles.md](docs/asdf.dotfiles.md) | ASDF version manager and managed runtimes |
+| [docs/mise.dotfiles.md](docs/mise.dotfiles.md) | mise version manager and managed runtimes |
 | [docs/github.dotfiles.md](docs/github.dotfiles.md) | GitHub DevSecOps config, branching strategy, CI/CD |
 | [CLAUDE.md](CLAUDE.md) | Claude Code guidance for this repo |
 
