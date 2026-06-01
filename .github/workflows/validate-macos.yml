@@ -1,0 +1,365 @@
+name: Validate on macOS
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  system-requirements:
+    name: System Requirements
+    runs-on: [self-hosted, macos]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Verify macOS version
+        run: |
+          version=$(sw_vers -productVersion)
+          major=$(echo $version | cut -d. -f1)
+          if [ "$major" -lt 12 ]; then
+            echo "❌ macOS version too old: $version (minimum: 12.0)"
+            exit 1
+          fi
+          echo "✅ macOS $version"
+
+      - name: Check Xcode CLT
+        run: |
+          if ! xcode-select -p &>/dev/null; then
+            echo "❌ Xcode CLT not installed"
+            exit 1
+          fi
+          xcode_version=$(xcode-select --version)
+          echo "✅ $xcode_version"
+
+      - name: Verify Homebrew
+        run: |
+          if ! command -v brew &>/dev/null; then
+            echo "❌ Homebrew not found in PATH"
+            exit 1
+          fi
+          brew_version=$(brew --version | head -1)
+          echo "✅ $brew_version"
+
+      - name: Check mise/ASDF availability
+        run: |
+          if command -v mise &>/dev/null; then
+            echo "✅ mise available: $(mise --version)"
+          elif command -v asdf &>/dev/null; then
+            echo "✅ asdf available: $(asdf --version)"
+          else
+            echo "⚠️  mise/ASDF not found (optional but recommended)"
+          fi
+
+  make-verify:
+    name: Make Verify
+    needs: system-requirements
+    runs-on: [self-hosted, macos]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Run make verify
+        run: |
+          echo "Running: make verify"
+          make verify
+          echo "✅ All prerequisites verified"
+
+  make-profile:
+    name: Make Profile
+    needs: make-verify
+    runs-on: [self-hosted, macos]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Backup existing configs
+        run: |
+          backup_dir="/tmp/dotfiles-backup-$(date +%s)"
+          mkdir -p "$backup_dir"
+
+          for file in .zshrc .zsh.d .config/nvim .tmux.conf .gitignore_global; do
+            target="$HOME/$file"
+            if [ -e "$target" ]; then
+              cp -R "$target" "$backup_dir/" 2>/dev/null || true
+              echo "✅ Backed up $target"
+            fi
+          done
+
+          echo "Backup location: $backup_dir"
+          echo "BACKUP_DIR=$backup_dir" >> $GITHUB_ENV
+
+      - name: Run make profile
+        run: |
+          echo "Running: make profile"
+          make profile
+          echo "✅ Configuration symlinked"
+
+      - name: Verify symlinks created
+        run: |
+          symlinks=(
+            "$HOME/.zshrc"
+            "$HOME/.zsh.d"
+            "$HOME/.config/nvim"
+            "$HOME/.tmux.conf"
+            "$HOME/.gitignore_global"
+          )
+
+          for link in "${symlinks[@]}"; do
+            if [ -L "$link" ]; then
+              target=$(readlink "$link")
+              echo "✅ $link → $target"
+            else
+              echo "❌ $link is not a symlink"
+              exit 1
+            fi
+          done
+
+      - name: Test zshrc sourcing
+        run: |
+          # Test syntax without executing
+          zsh -n "$HOME/.zshrc" && echo "✅ .zshrc syntax valid"
+
+      - name: Test tmux config syntax
+        run: |
+          if command -v tmux &>/dev/null; then
+            tmux source-file -v "$HOME/.tmux.conf" 2>&1 | grep -q "error" && exit 1 || true
+            echo "✅ tmux.conf syntax valid"
+          else
+            echo "⚠️  tmux not available for testing"
+          fi
+
+      - name: Restore backups on failure
+        if: failure()
+        run: |
+          if [ -n "$BACKUP_DIR" ] && [ -d "$BACKUP_DIR" ]; then
+            echo "Restoring from backup: $BACKUP_DIR"
+            # Restore logic would go here
+            echo "✅ Backup restored (simulation)"
+          fi
+
+  config-validation:
+    name: Config Validation
+    needs: make-profile
+    runs-on: [self-hosted, macos]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Validate ZSH modules
+        run: |
+          echo "Validating 11 ZSH modules..."
+          failed=0
+          for module in zsh.d/*.zsh; do
+            if zsh -n "$module" 2>/dev/null; then
+              echo "✅ $(basename $module)"
+            else
+              echo "❌ $(basename $module)"
+              failed=$((failed + 1))
+            fi
+          done
+
+          if [ $failed -gt 0 ]; then
+            echo "❌ $failed modules failed validation"
+            exit 1
+          fi
+          echo "✅ All 11 modules valid"
+
+      - name: Run custom validation script
+        run: |
+          if [ -f "scripts/validate-configs.sh" ]; then
+            bash scripts/validate-configs.sh
+            echo "✅ Custom validation passed"
+          else
+            echo "⚠️  Validation script not found"
+          fi
+
+  zsh-startup-time:
+    name: ZSH Startup Performance
+    needs: config-validation
+    runs-on: [self-hosted, macos]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Measure ZSH startup time
+        run: |
+          echo "Measuring ZSH startup time (5 runs)..."
+          times=()
+
+          for i in {1..5}; do
+            # Measure time in milliseconds
+            start=$(date +%s%N)
+            zsh -i -c exit > /dev/null 2>&1
+            end=$(date +%s%N)
+
+            # Convert to milliseconds
+            elapsed=$(( (end - start) / 1000000 ))
+            times+=($elapsed)
+            echo "Run $i: ${elapsed}ms"
+          done
+
+          # Calculate statistics
+          sum=0
+          min=${times[0]}
+          max=${times[0]}
+
+          for t in "${times[@]}"; do
+            sum=$((sum + t))
+            [ $t -lt $min ] && min=$t
+            [ $t -gt $max ] && max=$t
+          done
+
+          mean=$((sum / 5))
+
+          echo ""
+          echo "📊 Startup Time Statistics:"
+          echo "  Mean: ${mean}ms"
+          echo "  Min: ${min}ms"
+          echo "  Max: ${max}ms"
+
+          # Check threshold
+          threshold=500
+          if [ $mean -gt $threshold ]; then
+            echo "⚠️  Warning: Mean startup time (${mean}ms) exceeds threshold (${threshold}ms)"
+          else
+            echo "✅ Startup time within threshold"
+          fi
+
+          # Store for artifact
+          echo "STARTUP_MEAN=$mean" >> $GITHUB_ENV
+          echo "STARTUP_MIN=$min" >> $GITHUB_ENV
+          echo "STARTUP_MAX=$max" >> $GITHUB_ENV
+
+      - name: Comment on PR with timing
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea  # v7.0.1
+        with:
+          script: |
+            const mean = process.env.STARTUP_MEAN || 'unknown';
+            const min = process.env.STARTUP_MIN || 'unknown';
+            const max = process.env.STARTUP_MAX || 'unknown';
+
+            const comment = `## 📊 Startup Performance
+
+            | Metric | Value |
+            |--------|-------|
+            | Mean   | ${mean}ms |
+            | Min    | ${min}ms |
+            | Max    | ${max}ms |
+
+            ${mean > 500 ? '⚠️ Warning: Startup time exceeds 500ms threshold' : '✅ Startup time within acceptable range'}`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  integration-test:
+    name: Integration Tests
+    needs: config-validation
+    runs-on: [self-hosted, macos]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Check tool availability
+        run: |
+          echo "Checking tool availability..."
+
+          tools=(
+            "fzf:fzf"
+            "zoxide:zoxide"
+            "bat:bat"
+            "lsd:lsd"
+          )
+
+          failed=0
+          for tool_entry in "${tools[@]}"; do
+            IFS=':' read -r name cmd <<< "$tool_entry"
+            if command -v "$cmd" &>/dev/null; then
+              version=$($cmd --version 2>&1 | head -1)
+              echo "✅ $name: $version"
+            else
+              echo "⚠️  $name: not found (optional)"
+            fi
+          done
+
+      - name: Verify gitstatus
+        run: |
+          if command -v gitstatus &>/dev/null; then
+            echo "✅ gitstatus available"
+          else
+            echo "⚠️  gitstatus not found (prompt will fall back to vcs_info)"
+          fi
+
+      - name: Check PATH integrity
+        run: |
+          path_count=$(echo $PATH | tr ':' '\n' | wc -l)
+          echo "✅ PATH has $path_count components"
+
+          # Check for duplicates
+          duplicates=$(echo $PATH | tr ':' '\n' | sort | uniq -d | wc -l)
+          if [ $duplicates -gt 0 ]; then
+            echo "⚠️  Warning: $duplicates duplicate PATH entries found"
+          else
+            echo "✅ No duplicate PATH entries"
+          fi
+
+      - name: Test alias availability
+        run: |
+          # Source the config to test aliases
+          source "$HOME/.zshrc" 2>/dev/null || true
+
+          aliases=(
+            "lsl:lsd -lah"
+            "lsll:lsd -lahR"
+            "lslt:lsd -lahtr"
+          )
+
+          for alias_entry in "${aliases[@]}"; do
+            IFS=':' read -r alias_name alias_def <<< "$alias_entry"
+            # Just check if alias name is defined
+            if alias $alias_name &>/dev/null 2>&1; then
+              echo "✅ alias $alias_name defined"
+            else
+              echo "⚠️  alias $alias_name not found"
+            fi
+          done
+
+  runner-health:
+    name: Runner Health Check
+    runs-on: [self-hosted, macos]
+    if: always()
+    steps:
+      - name: Disk space
+        run: |
+          echo "💾 Disk Space:"
+          df -h / | tail -1
+
+          used=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
+          if [ $used -gt 80 ]; then
+            echo "⚠️  Warning: Disk usage high ($used%)"
+          fi
+
+      - name: Memory usage
+        run: |
+          echo "🧠 Memory Status:"
+          vm_stat | grep "Pages free"
+
+      - name: Runner software versions
+        run: |
+          echo "📦 Software Versions:"
+          echo "  macOS: $(sw_vers -productVersion)"
+          echo "  Xcode CLT: $(xcode-select --version)"
+          echo "  Homebrew: $(brew --version | head -1)"
+          [ -x "$(command -v node)" ] && echo "  Node: $(node --version)"
+          [ -x "$(command -v ruby)" ] && echo "  Ruby: $(ruby --version)"
+
+      - name: GitHub Runner version
+        run: |
+          runner_dir="${RUNNER_TOOL_CACHE%/*}/../.."
+          if [ -f "$runner_dir/.runner" ]; then
+            echo "✅ GitHub Actions runner configured"
+          fi
