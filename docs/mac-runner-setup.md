@@ -1,7 +1,28 @@
 # Self-Hosted macOS Runner Setup Guide
 
 **Status:** Quick Reference  
-**Last Updated:** June 1, 2026  
+**Last Updated:** June 3, 2026  
+**Runner Model:** On-Demand (manual start/stop, not always-on)
+
+---
+
+## Quick Start (On-Demand Model)
+
+**Recommended Workflow:**
+
+```bash
+# Terminal 1: Start runner (stays running until Ctrl+C)
+./scripts/ci/runner.sh start
+
+# Terminal 2: Create PR (triggers workflows automatically)
+git checkout -b feature/xyz
+git add .
+git commit -m "feat: xyz"
+git push origin feature/xyz
+# Create PR on GitHub → Watch Actions tab
+
+# Terminal 1: Stop runner (Ctrl+C)
+```
 
 ---
 
@@ -70,58 +91,48 @@ cd ~/actions-runner
 
 ---
 
-## Step 3: Install as LaunchD Service (Auto-Start)
+## Step 3: Using the On-Demand Runner
+
+**Preferred Method: Use runner.sh Script**
 
 ```bash
-cd ~/actions-runner
+# Start runner (foreground, easy to stop with Ctrl+C)
+./scripts/ci/runner.sh start
 
-# Install service
-./svc.sh install
+# Check status
+./scripts/ci/runner.sh status
 
-# Verify it's running
-launchctl list | grep actions.runner
+# Stop runner (manual or Ctrl+C)
+./scripts/ci/runner.sh stop
 
-# Expected output:
-# - PID number (running)
-# OR
-# - "load error" if not started yet
-
-# Start service manually if needed
-launchctl start actions.runner
+# Get help
+./scripts/ci/runner.sh help
 ```
 
----
-
-## Step 4: Verify Online Status
-
-Check in GitHub:
-
-1. Go to: **Settings** → **Actions** → **Runners**
-2. Look for your runner name
-3. Status should show: **Idle** (green dot)
-4. If offline, wait 1-2 minutes or restart
-
-Or check locally:
+**Alternative: Manual Run**
 
 ```bash
-# Terminal on your Mac
 cd ~/actions-runner
+
+# Run in foreground
 ./run.sh
 
 # Expected output:
 # ✓ Listening for Jobs
-# (Wait here - ctrl+C to stop)
-
-# In GitHub, check status updates
+# (Press Ctrl+C to stop)
 ```
 
 ---
 
-## Step 5: Test Workflow
+## Step 4: Test Workflow
 
-Create test PR:
+Create and test a PR:
 
 ```bash
+# Terminal 1: Start runner
+./scripts/ci/runner.sh start
+
+# Terminal 2: Create test PR
 git checkout -b test/ci-validation
 echo "# Test CI" >> README.md
 git add README.md
@@ -131,46 +142,102 @@ git push origin test/ci-validation
 
 Then:
 
-1. Create PR on GitHub (to develop branch)
-2. Go to **Actions** tab
-3. Watch workflows execute
+1. Create PR on GitHub (to develop or main branch)
+2. Go to **Actions** tab in GitHub
+3. Watch workflows execute on self-hosted runner
 4. Verify all jobs pass:
-   - validate.yml (Ubuntu, ~2 min)
-   - Then validate-macos.yml (macOS, ~8 min)
+   - system-requirements (~30s)
+   - make-verify (~1m)
+   - make-profile (~1m)
+   - config-validation (~30s)
+   - zsh-startup-time (~1m)
+   - integration-test (~30s)
+   - runner-health (~30s)
+   - Total: ~3.5-4 min per workflow run
 
-Delete test branch when done:
+Clean up test branch:
 
 ```bash
+# Terminal 2: After PR is closed/merged
 git checkout develop
 git branch -D test/ci-validation
 git push origin --delete test/ci-validation
+
+# Terminal 1: Stop runner
+# (Press Ctrl+C)
 ```
+
+---
+
+## Step 5: Alternative Setup - Always-On Service (Optional)
+
+If you prefer always-on operation (not recommended for personal use):
+
+```bash
+cd ~/actions-runner
+
+# Install as LaunchD service
+./svc.sh install
+
+# Verify it's running
+launchctl list | grep actions.runner
+
+# Start/stop as needed
+launchctl start actions.runner
+launchctl stop actions.runner
+```
+
+**Note:** On-demand (Step 3) is recommended for personal repos to save resources.
 
 ---
 
 ## Common Commands
 
-```bash
-# Check status
-launchctl list | grep actions
+**Using runner.sh (Recommended):**
 
-# Start runner
-launchctl start actions.runner
+```bash
+# Start on-demand runner
+./scripts/ci/runner.sh start
+
+# Check if running
+./scripts/ci/runner.sh status
 
 # Stop runner
-launchctl stop actions.runner
+./scripts/ci/runner.sh stop
 
-# Restart runner
-launchctl stop actions.runner
-sleep 5
-launchctl start actions.runner
+# Configure runner
+./scripts/ci/runner.sh config
+```
 
-# View logs
-log stream --predicate 'process == "runner"' --level debug
+**Manual Runner Commands (Alternative):**
+
+```bash
+# Start runner manually
+cd ~/actions-runner
+./run.sh
+
+# Stop runner (from different terminal)
+pkill -f "Runner.Listener"
 
 # Check runner directory
 cd ~/actions-runner
 ls -la
+```
+
+**LaunchD Service Commands (If using always-on mode):**
+
+```bash
+# Start service
+launchctl start actions.runner
+
+# Stop service
+launchctl stop actions.runner
+
+# Check status
+launchctl list | grep actions.runner
+
+# View logs
+log stream --predicate 'process == "runner"' --level debug
 ```
 
 ---
@@ -234,23 +301,56 @@ cd ~/actions-runner
 
 ## Next Steps
 
-1. Verify runner is **online** in GitHub
-2. Test with sample PR
-3. Monitor health monthly using: `./scripts/ci/runner-health.sh`
-4. Keep runner running (always-on recommended)
+1. **Runner is configured** ✅
+2. **Start runner when needed:**
+   ```bash
+   ./scripts/ci/runner.sh start
+   ```
+3. **Create PR to trigger workflows** (runner must be running)
+4. **Stop runner when done** (Ctrl+C or `./scripts/ci/runner.sh stop`)
+5. **Monitor health monthly:**
+   ```bash
+   ./scripts/ci/runner-health.sh
+   ```
+
+**Typical Workflow:**
+- Morning: Start runner with `./scripts/ci/runner.sh start`
+- Work: Make commits, create PRs, workflows run automatically
+- Evening: Stop runner with Ctrl+C
+- Repeat as needed
 
 ---
 
 ## FAQ
 
-**Q: Do I need to do anything after Mac restarts?**  
-A: No. Launchd automatically restarts the service.
+**Q: Do I need to start the runner manually every time?**  
+A: Yes, on-demand model. Use `./scripts/ci/runner.sh start`. Press Ctrl+C to stop when done.
 
-**Q: Can I run multiple runners?**  
+**Q: What if I want always-on (auto-start after reboot)?**  
+A: Possible but not recommended for personal use. See Step 5 for LaunchD setup.
+
+**Q: Can I have multiple runners?**  
 A: Yes, register separately with different names/labels.
 
 **Q: How much disk space does runner need?**  
-A: ~5GB initial, grows with workflow artifacts.
+A: ~5GB initial, grows with workflow artifacts. Clean with: `rm -rf ~/actions-runner/_work/*`
 
-**Q: Can I uninstall runner?**  
-A: Yes - run `./svc.sh uninstall` then delete ~/actions-runner
+**Q: How do I uninstall the runner?**  
+A:
+```bash
+cd ~/actions-runner
+./svc.sh uninstall  # If using LaunchD service
+rm -rf ~/actions-runner
+```
+
+**Q: Where are runner logs?**  
+A: Check: `~/actions-runner/_diag/Worker_*.log`
+
+**Q: Runner not appearing in GitHub?**  
+A:
+- Check: `./scripts/ci/runner.sh status`
+- Verify: Network connectivity and repo access
+- Reconfigure: `./scripts/ci/runner.sh config`
+
+**Q: How often should I update the runner?**  
+A: Check monthly for updates. GitHub auto-notifies of critical updates.
