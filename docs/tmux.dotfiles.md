@@ -68,7 +68,7 @@ Single `tmux.conf` for tmux 3.4+, optimized for macOS with TokyoNight Night them
 
 No tmux-yank plugin. `y` pipes directly to `pbcopy`:
 
-```
+```tmux
 bind -T copy-mode-vi y send -X copy-pipe-and-cancel "pbcopy; tmux display 'Copied to clipboard'"
 ```
 
@@ -78,7 +78,7 @@ Mouse drag, double-click, and triple-click all also pipe to `pbcopy`. Right-clic
 
 `C-h/j/k/l` pane navigation is aware of Neovim splits via `vim-tmux-navigator`. The `is_vim` shell check uses macOS `ps -o state= -o comm=` format:
 
-```
+```bash
 is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'"
 ```
 

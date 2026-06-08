@@ -1,0 +1,17 @@
+# Markdownlint configuration
+default: true
+
+# Disable line length — prose docs contain long paths, URLs, and table cells
+MD013: false
+
+# Allow PR templates and non-user-docs to omit H1 as first line
+MD041: false
+
+# Allow multiple H1 headings (common in dotfile docs)
+MD025: false
+
+# Allow inline HTML (used in README badges)
+MD033: false
+
+# Allow emphasis as heading replacement in some contexts
+MD036: false

@@ -37,11 +37,6 @@ $RECYCLE.BIN/
 # Editors and IDEs
 # =============================================================================
 
-# VS Code
-.vscode/
-*.code-workspace
-.history/
-
 # JetBrains (IntelliJ, PyCharm, WebStorm, etc.)
 .idea/
 *.iml

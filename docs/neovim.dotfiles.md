@@ -4,7 +4,7 @@ Lua-based Neovim config with `lazy.nvim` as plugin manager. Entry point: `nvim/i
 
 ## Structure
 
-```
+```text
 nvim/
 ├── init.lua                    # Bootstrap: leader, lazy.nvim, core modules
 ├── lazy-lock.json              # Plugin version lockfile

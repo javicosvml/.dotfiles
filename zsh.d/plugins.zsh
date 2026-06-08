@@ -28,7 +28,7 @@ zinit ice wait'0' lucid
 zinit light zdharma-continuum/history-search-multi-word
 
 # Kubernetes prompt (only if kubectl exists)
-if [[ -x "$HOME/.asdf/shims/kubectl" ]] || command -v kubectl &>/dev/null; then
+if command -v kubectl &>/dev/null; then
   zinit ice wait'1' lucid
   zinit light superbrothers/zsh-kubectl-prompt
 fi

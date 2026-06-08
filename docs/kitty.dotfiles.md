@@ -70,7 +70,7 @@ Normal palette: `color0-7` = TokyoNight standard. Extended: `color16=#ff9e64`, `
 
 ### Search
 
-```
+```bash
 cmd+f — launches fzf over screen scrollback in an overlay
 ```
 
