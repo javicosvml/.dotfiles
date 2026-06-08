@@ -20,7 +20,7 @@ git clone https://github.com/javicosvml/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 make verify   # Check system prerequisites
-make all      # Full install: Homebrew → ASDF → configs → tools → Kitty
+make all      # Full install: Homebrew → mise → configs → tools → Kitty
 source ~/.zshrc
 ```
 
@@ -34,7 +34,7 @@ source ~/.zshrc
 - **Modular ZSH** — 11 ordered modules in `zsh.d/` with ~47ms startup via gitstatus
 - **Unified theme** — TokyoNight Night across Kitty, Neovim, and Tmux
 - **Native clipboard** — tmux copy-mode wired to `pbcopy`/`pbpaste`; no plugins
-- **Version management** — ASDF handles Node.js, Go, Ruby, and Terraform side-by-side
+- **Version management** — mise handles Node.js, Go, Ruby, and Terraform side-by-side
 
 ---
 
@@ -68,7 +68,7 @@ source ~/.zshrc
 │   ├── colors.zsh              # ls color schemes
 │   ├── kitty.zsh               # Kitty integration
 │   ├── alias.zsh               # Aliases (lsd, bat, git, tmux)
-│   ├── tools.zsh               # ASDF, fzf, bat, zoxide integration
+│   ├── tools.zsh               # mise, fzf, bat, zoxide integration
 │   └── claude.zsh              # Claude Code / AWS Bedrock (untracked)
 ├── nvim/                       # Neovim → ~/.config/nvim/
 │   ├── init.lua                # Bootstraps lazy.nvim
@@ -139,8 +139,8 @@ Mouse drag, double-click, and triple-click all pipe directly to `pbcopy`.
 | [docs/kitty.dotfiles.md](docs/kitty.dotfiles.md) | Terminal settings, shortcuts, theme |
 | [docs/makefile.dotfiles.md](docs/makefile.dotfiles.md) | All Makefile targets reference |
 | [docs/mise.dotfiles.md](docs/mise.dotfiles.md) | mise version manager and managed runtimes |
-| [docs/github.dotfiles.md](docs/github.dotfiles.md) | GitHub DevSecOps config, branching strategy, CI/CD |
-| [CLAUDE.md](CLAUDE.md) | Claude Code guidance for this repo |
+| [docs/devops.dotfiles.md](docs/devops.dotfiles.md) | CI/CD workflows, GitHub Actions, branch protection |
+| [docs/github.dotfiles.md](docs/github.dotfiles.md) | GitHub DevSecOps config, branching strategy |
 
 ---
 

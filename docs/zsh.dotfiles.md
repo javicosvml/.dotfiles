@@ -6,7 +6,7 @@ ZSH shell setup using Zinit as plugin manager. Entry point is `zshrc`, which sou
 
 ```
 zshrc
-  └─ tmux auto-start (login shells, skips VS Code)
+  └─ tmux auto-start (login shells con TTY)
   └─ Zinit bootstrap
   └─ env.zsh          — Homebrew PATH, locale, EDITOR
   └─ options.zsh      — AUTO_CD, PUSHD, completion opts
@@ -17,7 +17,7 @@ zshrc
   └─ colors.zsh       — LS_COLORS
   └─ kitty.zsh        — Kitty terminal integration
   └─ alias.zsh        — Shell aliases
-  └─ tools.zsh        — ASDF, fzf, bat, zoxide
+  └─ tools.zsh        — mise, fzf, bat, zoxide
   └─ claude.zsh       — Claude Code / AWS Bedrock (untracked)
   └─ direnv hook      — deferred via precmd
 ```

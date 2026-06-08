@@ -7,16 +7,7 @@ if command -v mise &>/dev/null; then
   eval "$(mise activate zsh)"
 fi
 
-# TMUX: Start a new tmux session if not already inside one
-# Documentation: https://github.com/tmux/tmux
-# Only auto-start on interactive shells, not in VS Code, Kitty tabs, or other terminals
-# Disabled to prevent instant prompt warnings - uncomment if needed
-# if [[ -z "$TMUX" ]] && [[ -z "$VSCODE_INJECTION" ]] && [[ -z "$TERM_PROGRAM" ]] && [[ "$TERM" != "xterm-kitty" ]]; then
-#   if command -v tmux &>/dev/null; then
-#     # Check if there's a session named 'main', attach or create
-#     tmux has-session -t main 2>/dev/null && tmux attach-session -t main || tmux new-session -s main
-#   fi
-# fi
+# TMUX: auto-start handled in zshrc (login shells with TTY only)
 
 # Neovim aliases (EDITOR/VISUAL set in env.zsh)
 # Documentation: https://neovim.io/

@@ -3,7 +3,6 @@
     "allow": [
       "Bash(git:*)",
       "Bash(make:*)",
-      "Bash(asdf:*)",
       "Bash(gh:*)",
       "Bash(tmux:*)",
       "Bash(nvim:*)",
