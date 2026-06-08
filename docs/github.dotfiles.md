@@ -23,7 +23,7 @@
 
 ## Branching Strategy
 
-```
+```text
 main ──────────────────────────────────────── production-ready
            ↑ squash PR
 develop ───────────────────────────────────── integration branch
@@ -41,6 +41,50 @@ chore/*   ───────────────────────�
 4. Squash-merge to `develop` after CI passes
 5. Open PR → `main` from `develop` when a stable batch is ready
 6. Squash-merge to `main`
+
+### Daily Workflow
+
+```bash
+# Start new work
+git checkout develop && git pull origin develop
+git checkout -b feat/my-change
+
+# Commit (Conventional Commits format)
+git add -p                              # stage intentionally
+git commit -m "feat(zsh): add aws-cli alias to alias.zsh"
+
+# Pre-commit hooks run automatically:
+#   shellcheck → zsh -n → tmux source-file → markdownlint
+
+# Push and open PR
+git push -u origin feat/my-change
+gh pr create --base develop --title "feat(zsh): add aws-cli alias"
+```
+
+### Pre-PR Checklist
+
+Before opening a PR, verify locally:
+
+```bash
+bash scripts/validate-configs.sh    # tmux syntax, ZSH modules, clipboard
+make verify                         # system prerequisites check
+zsh -n zshrc                        # zshrc syntax
+for f in zsh.d/*.zsh; do zsh -n "$f"; done  # all modules
+tmux source-file ~/.tmux.conf       # tmux config
+```
+
+### Merge and Release
+
+```bash
+# Merge feature → develop (via PR, squash)
+gh pr merge <number> --squash --delete-branch
+
+# Merge develop → main when batch is stable (via PR, squash)
+git checkout develop && git pull
+gh pr create --base main --title "release: batch of features $(date +%Y-%m-%d)"
+# Wait for CI green, then merge
+gh pr merge <number> --squash
+```
 
 ### Branch naming conventions
 
@@ -68,6 +112,7 @@ Rulesets are the modern GitHub standard (2024+), replacing legacy branch protect
 | Required reviews | 0 (solo repo) |
 | Dismiss stale reviews | Yes |
 | Resolve all threads | Required before merge |
+| Required status checks | ShellCheck, Validate Configs, Markdownlint, macOS Config Validation, Secret Scan (Gitleaks) |
 
 ### `protect-develop` (ID: 15746474)
 
@@ -130,7 +175,7 @@ Scans `github-actions` ecosystem weekly on Mondays at 08:00 Europe/Madrid. Group
 
 All commits follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 <type>[optional scope]: <description>
 
 [optional body]

@@ -13,8 +13,6 @@
 *.swo
 *~
 .idea/
-.vscode/
-!.vscode/settings.json
 
 # Shell runtime
 .zsh_sessions/
