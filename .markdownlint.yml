@@ -15,3 +15,6 @@ MD033: false
 
 # Allow emphasis as heading replacement in some contexts
 MD036: false
+
+# Allow any table column style — pipe alignment varies across editors
+MD060: false
