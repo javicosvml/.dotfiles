@@ -21,9 +21,8 @@ jobs:
       # ── Install tools ──────────────────────────────────────────────────────
       - name: Install tools
         run: |
-          brew install tmux neovim kitty
-          curl https://mise.run | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          brew install tmux neovim kitty mise
+          echo "$(brew --prefix)/bin" >> "$GITHUB_PATH"
 
       # ── Symlink configs ────────────────────────────────────────────────────
       - name: Symlink configs
