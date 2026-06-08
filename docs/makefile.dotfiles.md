@@ -6,7 +6,7 @@ Single-file installer and profile manager for macOS dotfiles. All targets are id
 
 `make all` runs these targets en secuencia:
 
-```
+```text
 check-xcode → brew → mise → profile → tools → kitty
 ```
 
@@ -77,7 +77,7 @@ Todos los runtimes se instalan via `mise use --global <tool>@latest`:
 
 Todos los targets de `make profile` respaldan configs existentes no-symlink antes de sobrescribir:
 
-```
+```text
 ~/.zshrc        → ~/.zshrc.backup
 ~/.zsh.d/       → ~/.zsh.d.backup/
 ~/.config/nvim/ → ~/.config/nvim.backup/

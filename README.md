@@ -54,7 +54,7 @@ source ~/.zshrc
 
 ## Project Structure
 
-```
+```text
 ~/.dotfiles/
 ├── Makefile                    # Unified installer — all targets idempotent
 ├── zshrc                       # ZSH entry point → ~/.zshrc

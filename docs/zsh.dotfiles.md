@@ -4,7 +4,7 @@ ZSH shell setup using Zinit as plugin manager. Entry point is `zshrc`, which sou
 
 ## Loading Order
 
-```
+```text
 zshrc
   └─ tmux auto-start (login shells con TTY)
   └─ Zinit bootstrap

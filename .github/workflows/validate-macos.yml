@@ -93,6 +93,8 @@ jobs:
       # ── TMUX ──────────────────────────────────────────────────────────────
       - name: "[TMUX] Validate config"
         run: |
+          mkdir -p "$HOME/.tmux/plugins"
+          git clone --depth=1 https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm" 2>/dev/null || true
           tmux new-session -d -s ci 2>/dev/null || true
           tmux source-file "$HOME/.tmux.conf"
           echo "TMUX config OK"
@@ -119,6 +121,15 @@ jobs:
           mise doctor || true
           echo "Mise OK"
 
+      # ── macOS Security ────────────────────────────────────────────────────
+      - name: "[macOS] Security checks"
+        run: |
+          echo "=== SIP Status ==="
+          csrutil status 2>&1 || echo "Note: SIP status unavailable outside Recovery"
+          echo "=== Gatekeeper Status ==="
+          spctl --status 2>&1 || echo "Note: Gatekeeper status unavailable"
+          echo "macOS security checks complete"
+
       # ── Summary ───────────────────────────────────────────────────────────
       - name: GitHub Step Summary
         if: always()
@@ -133,5 +144,6 @@ jobs:
           echo "| Kitty | \`kitty --check-config\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Neovim | \`nvim --headless +qa\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Mise | \`mise doctor\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| macOS | SIP + Gatekeeper status |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Runner: \`macos-latest\` (GitHub-hosted, on-demand)" >> "$GITHUB_STEP_SUMMARY"

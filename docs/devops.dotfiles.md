@@ -59,7 +59,7 @@ En PRs: comenta automáticamente los tiempos de startup de ZSH.
 
 ## Gitflow
 
-```
+```text
 main (stable)
   ↑ PR requerido — todos los workflows deben pasar
   ├─ validate.yml          (shellcheck, zsh syntax, markdownlint)
@@ -80,7 +80,7 @@ feature/* (trabajo)
 
 Configurar en **Settings → Branches → Branch protection rules** para `main`:
 
-```
+```text
 Require status checks to pass before merging:
   ✓ Validate (ubuntu)
   ✓ macOS Config Validation

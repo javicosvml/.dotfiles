@@ -38,6 +38,7 @@ nvim +"Lazy sync" +qa
 ## Configuration Validation is Strict
 
 Pre-commit hooks (`.pre-commit-config.yaml`) block commits on:
+
 - ShellCheck on `.sh` files (but **ZSH modules in `zsh.d/` are excluded** — they're sourced, not executed)
 - Syntax validation via `scripts/validate-configs.sh` on `tmux.conf`, `zshrc`, `zsh.d/*.zsh`
 - YAMLLint, Markdownlint, Typos, Gitleaks
@@ -48,7 +49,7 @@ Pre-commit hooks (`.pre-commit-config.yaml`) block commits on:
 
 `zshrc` is the entry point. It auto-starts tmux (login shells only, skips VS Code), bootstraps Zinit, then sources 11 modules from `~/.zsh.d/` in this exact order:
 
-```
+```text
 env.zsh → options.zsh → history.zsh → plugins.zsh → prompt.zsh →
 completion.zsh → colors.zsh → kitty.zsh → alias.zsh → tools.zsh → claude.zsh
 ```
@@ -78,24 +79,31 @@ completion.zsh → colors.zsh → kitty.zsh → alias.zsh → tools.zsh → clau
 ## Quirks That Will Trip Agents
 
 ### 1. Tmux Supports `C-a` as Secondary Prefix (GNU Screen-compatible)
+
 Primary prefix is default `C-b`, but `C-a` is set as `prefix2` for GNU Screen compatibility via `send-prefix -2`. Code uses `bind C-a` to support this. All custom bindings should respect this dual-prefix setup.
 
 ### 2. Tmux Has Native `pbcopy`/`pbpaste`, No tmux-yank
+
 Copy-mode-vi `y` pipes directly to `pbcopy`. Mouse drag/triple-click also use `pbcopy`. Do not add `tmux-yank` plugin — it conflicts.
 
 ### 3. `ls` Uses Native `/bin/ls -G`, Not `lsd`
+
 Native `ls` avoids iCloud/network file timeout issues (`os error 60`). `lsd` available explicitly via `lsl` / `lsll` / `lslt` aliases when safe.
 
 ### 4. Prompt Uses `gitstatus`, Not vcs_info
+
 `prompt.zsh` uses **gitstatus** for ~47ms git status (not vcs_info). Falls back to vcs_info if gitstatus unavailable. Fast startup critical.
 
 ### 5. Prompt is Parametrized, Not Templated
+
 Customize by editing `PROMPT_*` variables at the top of `zsh.d/prompt.zsh` directly. No separate config file exists.
 
 ### 6. `claude.zsh` is Untracked
+
 `zsh.d/claude.zsh` is in `.zshrc` sources but **should not be committed** — it contains AWS Bedrock model ARN and env vars. Agents should never write to it.
 
 ### 7. Version Manager: mise (Not ASDF)
+
 Uses `mise` (modern ASDF replacement). Makefile has `mise use --global <tool>@latest`. Language versions: Node.js (LTS even-numbered), Go, Ruby, Terraform.
 
 **Why:** Agents unfamiliar with mise might call ASDF commands. Agents might add `tmux-yank` or change `ls` alias. Agents might edit the wrong prompt variables or commit `claude.zsh`.
@@ -149,6 +157,7 @@ git commit -m "your message"  # Blocks if validation fails
 ## Symlink Model
 
 All config files are **symlinked from repo** into home directory:
+
 - `~/.zshrc` → `/Users/javiercoscolla/.dotfiles/zshrc`
 - `~/.zsh.d` → `/Users/javiercoscolla/.dotfiles/zsh.d`
 - `~/.config/nvim` → `/Users/javiercoscolla/.dotfiles/nvim`
